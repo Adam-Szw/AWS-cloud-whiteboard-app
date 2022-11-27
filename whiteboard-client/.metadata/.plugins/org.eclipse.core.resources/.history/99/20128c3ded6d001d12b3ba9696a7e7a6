@@ -1,0 +1,19 @@
+package application;
+
+import application.drawings.Line;
+import application.drawings.Shape;
+
+public class GraphicsImplementer {
+	
+	DrawingPanel panel;
+	
+	public GraphicsImplementer(DrawingPanel panel) {
+		this.panel = panel;
+	}
+	
+	public void draw(Line line) {
+		panel.graphics.drawLine(oldX, oldY, currentX, currentY);
+		panel.repaint();
+	}
+
+}

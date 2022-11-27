@@ -1,0 +1,29 @@
+package application;
+
+import java.io.IOException;
+
+public class StateReceiver implements Runnable {
+
+	Comms comms;
+	
+	public StateReceiver(Comms comms) {
+		this.comms = comms;
+	}
+	
+	void receiveState() throws IOException {
+		String newState = comms.din.readUTF();
+		System.out.println("Server sent state: " + newState);
+	}
+	
+	@Override
+	public void run() {
+		
+		while(true) {
+			try {
+				receiveState();
+				Thread.sleep(10);
+			} catch(Exception e){ System.out.println(e); }
+		}
+	}
+	
+}

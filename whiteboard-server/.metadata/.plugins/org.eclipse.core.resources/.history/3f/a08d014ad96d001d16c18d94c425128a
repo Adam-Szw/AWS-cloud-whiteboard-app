@@ -1,0 +1,5 @@
+package whiteboard_server;
+
+public class StateUpdater {
+
+}

@@ -1,0 +1,35 @@
+package application;
+
+import java.io.IOException;
+
+public class StateSender implements Runnable {
+
+	public String toPost = "";
+	
+	Comms comms;
+	
+	public StateSender(Comms comms) {
+		this.comms = comms;
+	}
+	
+	void postState() throws IOException {
+		dout.writeUTF(toPost);
+		dout.flush();
+		
+		String str = din.readUTF();
+		if(str.equals("ack")) {
+			System.out.println("Server accepted state change");
+			toPost = "";
+		}
+		else {
+			System.out.println("Unknown server message");
+		}
+	}
+	
+	@Override
+	public void run() {
+		// TODO Auto-generated method stub
+		
+	}
+
+}

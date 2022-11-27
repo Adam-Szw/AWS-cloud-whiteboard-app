@@ -1,0 +1,44 @@
+package application;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
+
+public class Comms implements Runnable {
+	
+	String host;
+	int port;
+	
+	DataInputStream din;
+	DataOutputStream dout;
+	
+	public Comms(String host, int port) {
+		this.host = host;
+		this.port = port;
+	}
+	
+	public void postState(String state) {
+		sender.toPost = state;
+	}
+
+	@Override
+	public void run() {
+		
+		try {
+			Socket s = new Socket(host, port);
+			din = new DataInputStream(s.getInputStream());
+			dout = new DataOutputStream(s.getOutputStream());
+			
+			sender = new StateSender(this);
+			Thread senderThread = new Thread(sender);
+			senderThread.start();
+			
+			receiver = new StateReceiver(this);
+			Thread receiverThread = new Thread(receiver);
+			receiverThread.start();
+			
+		} catch(Exception e){ System.out.println(e); }
+	}
+	
+}
