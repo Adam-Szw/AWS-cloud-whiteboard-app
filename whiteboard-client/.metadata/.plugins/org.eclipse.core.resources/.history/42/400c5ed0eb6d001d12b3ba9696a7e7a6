@@ -1,0 +1,15 @@
+package application;
+
+import java.awt.Graphics2D;
+
+public class GraphicsImplementer {
+	
+	DrawingPanel panel;
+	
+	public GraphicsImplementer(DrawingPanel panel) {
+		this.graphics = graphics;
+	}
+	
+	
+
+}

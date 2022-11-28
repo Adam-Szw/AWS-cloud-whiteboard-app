@@ -1,0 +1,9 @@
+1669494131591	Delete element
+1669501315211	Rename type 'ClientConnection'
+1669501497779	Rename type 'ClientStateListener'
+1669501553537	Delete element
+1669502639071	Rename type 'StateReceiver'
+1669502645810	Rename field 'stateReceivers'
+1669502666269	Rename local variable 'stateReceiver'
+1669504790255	Rename method 'receiveState'
+1669508070623	Rename field 'stateUpdated'

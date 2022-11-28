@@ -1,0 +1,23 @@
+package application;
+
+import java.io.IOException;
+
+public class StateReceiver implements Runnable {
+
+	Comms comms;
+	
+	public StateReceiver(Comms comms) {
+		this.comms = comms;
+	}
+	
+	@Override
+	public void run() {
+		
+		while(true) {
+			try {
+				
+			} catch(Exception e){ System.out.println(e); }
+		}
+	}
+	
+}

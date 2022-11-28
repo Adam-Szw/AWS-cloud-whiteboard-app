@@ -1,0 +1,42 @@
+package whiteboard_server;
+
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.util.ArrayList;
+import java.util.List;
+
+public class Server {
+	
+	static final int SERVER_PORT = 6668;
+	
+	String serverState = "";
+	public int port;
+	public ServerSocket serverSocket;
+	
+	List<StateReceiver> stateReceivers = new ArrayList<StateReceiver>();
+	StateReceiver updater = null;
+	
+	public Server(int port) throws IOException {
+		this.port = port;
+		serverSocket = new ServerSocket(port);
+	}
+
+	public static void main(String[] args) throws IOException, InterruptedException {
+		Server server = new Server(SERVER_PORT);
+		ClientAccepter accepter = new ClientAccepter(server);
+		Thread accepterThread = new Thread(accepter);
+		accepterThread.start();
+		
+		while(true) {
+			if(server.updater == null) {
+				Thread.sleep(10);
+				continue;
+			} else {
+				for(StateReceiver receiver : stateReceivers) {
+					
+				}
+			}
+		}
+	}
+
+}

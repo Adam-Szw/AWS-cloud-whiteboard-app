@@ -1,0 +1,11 @@
+package whiteboard_server;
+
+public class ClientAccepter implements Runnable {
+
+	@Override
+	public void run() {
+		// TODO Auto-generated method stub
+		
+	}
+
+}

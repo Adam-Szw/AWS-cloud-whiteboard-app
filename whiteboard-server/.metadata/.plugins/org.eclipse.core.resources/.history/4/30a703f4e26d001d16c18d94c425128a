@@ -1,0 +1,48 @@
+package whiteboard_server;
+
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.util.ArrayList;
+import java.util.List;
+
+public class Server {
+	
+	static final int SERVER_PORT = 6668;
+	
+	String serverState = "";
+	public int port;
+	public ServerSocket serverSocket;
+	
+	List<ClientConnection> connections = new ArrayList<ClientConnection>();
+	ClientConnection updater = null;
+	
+	public Server(int port) throws IOException {
+		this.port = port;
+		serverSocket = new ServerSocket(port);
+	}
+	
+	public void updateClientStates() throws IOException {
+		for(ClientConnection connection : connections) {
+			if(!connection.stateUploaded) {
+				connection.message += serverState;
+				connection.stateUploaded = true;
+			}
+		}
+		updater = null;
+	}
+
+	public static void main(String[] args) throws IOException, InterruptedException {
+		Server server = new Server(SERVER_PORT);
+		ClientAccepter accepter = new ClientAccepter(server);
+		Thread accepterThread = new Thread(accepter);
+		accepterThread.start();
+		while(true) {
+			if(server.updater != null) {
+				server.updateClientStates();
+			} else {
+				Thread.sleep(10);
+			}
+		}
+	}
+
+}
