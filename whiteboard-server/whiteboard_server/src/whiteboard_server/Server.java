@@ -10,14 +10,13 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Server {
 	
 	static final int SERVER_PORT = 6668;
+	static final int UPDATE_TICKRATE = 5;
 	
 	public int port;
 	public ServerSocket serverSocket;
 	public State state;
 	
 	List<ClientConnection> connections = new ArrayList<ClientConnection>();
-	Lock clientsUpdatedLock = new ReentrantLock();
-	Boolean clientsUpdated = true;
 	
 	public Server(int port) throws IOException {
 		this.port = port;
@@ -26,13 +25,11 @@ public class Server {
 	}
 	
 	public void updateClientStates() throws IOException {
-		System.out.println("updating clients");
 		for(ClientConnection connection : connections) {
 			for(int i = 0; i < state.updates.size(); i++) {
 				connection.addMessage("UPDATE;" + state.updates.get(i));
 			}
 		}
-		clientsUpdated = true;
 	}
 	
 	public void updateOtherServers() {
@@ -45,13 +42,8 @@ public class Server {
 		Thread accepterThread = new Thread(accepter);
 		accepterThread.start();
 		while(true) {
-			if(!server.clientsUpdated) {
-				server.clientsUpdatedLock.lock();
-				server.updateClientStates();
-				server.clientsUpdatedLock.unlock();
-			} else {
-				Thread.sleep(10);
-			}
+			server.updateClientStates();
+			Thread.sleep(UPDATE_TICKRATE);
 		}
 	}
 

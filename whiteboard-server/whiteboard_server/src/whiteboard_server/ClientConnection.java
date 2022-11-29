@@ -69,7 +69,6 @@ public class ClientConnection implements Runnable {
 	
 	void writeMessage() throws IOException {
 		messageLock.lock();
-		System.out.print("sent message " + message);
 		dout.writeUTF(message);
 		dout.flush();
 		message = "";
@@ -78,11 +77,7 @@ public class ClientConnection implements Runnable {
 	
 	void receiveMessage() throws IOException {
 		String str = din.readUTF();
-		System.out.println("received message " + str);
-		server.clientsUpdatedLock.lock();
 		server.state.updateState(str);
-		server.clientsUpdated = false;
 		addMessage("ACK;" + str);
-		server.clientsUpdatedLock.unlock();
 	}
 }
