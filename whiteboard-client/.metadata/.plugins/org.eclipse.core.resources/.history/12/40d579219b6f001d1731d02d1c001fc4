@@ -1,0 +1,105 @@
+package application;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+public class Comms implements Runnable {
+	
+	String host;
+	int port;
+	
+	DataInputStream din;
+	DataOutputStream dout;
+	
+	public String messageToSend = "";
+	
+	public Lock messagesLock = new ReentrantLock();
+	public List<Long> confirmations;
+	public List<UpdateGroup> stateUpdates;
+	
+	public Comms(String host, int port) {
+		this.host = host;
+		this.port = port;
+		this.confirmations = new ArrayList<Long>();
+		this.stateUpdates = new ArrayList<UpdateGroup>();
+	}
+	
+	void postMessage() throws IOException {
+		dout.writeUTF(messageToSend);
+		dout.flush();
+		messageToSend = "";
+	}
+	
+	void receiveMessage() throws IOException {
+		String response = din.readUTF();
+		System.out.println("Server sent response: " + response);
+
+	}
+	
+	void sortMessage(String msg) {
+		if(msg.length() >= 4 && msg.substring(0, 4).equals("ACK;")) {
+			int idloc = msg.indexOf("ID:") + 3;
+			int idend = msg.indexOf(";", idloc);
+			long id = Long.parseLong(msg.substring(idloc, idend));
+			confirmations.add(id);
+		}
+		
+		if(msg.length() >= 7 && msg.substring(0, 8).equals("UPDATE;")) {
+			int idloc = msg.indexOf("ID:") + 3;
+			int idend = msg.indexOf(";", idloc);
+			String id = msg.substring(idloc, idend);
+			UpdateGroup newUpdate = new UpdateGroup(Long.parseLong(id));
+			for(String str : msg.substring(idend).split(";")) {
+				newUpdate.append(str);
+			}
+			stateUpdates.add(newUpdate);
+		}
+	}
+
+	@Override
+	public void run() {
+		try {
+			Socket s = new Socket(host, port);
+			din = new DataInputStream(s.getInputStream());
+			dout = new DataOutputStream(s.getOutputStream());
+			
+			Thread senderThread = new Thread(new Runnable() {
+				@Override
+				public void run() {
+					while(true) {
+						try {
+							if(messageToSend.equals("")) {
+								Thread.sleep(10);
+							} else {
+								postMessage();
+							}
+						} catch(Exception e){ System.out.println(e); }
+					}
+					
+				}
+			});
+			senderThread.start();
+			
+			Thread receiverThread = new Thread(new Runnable() {
+				@Override
+				public void run() {
+					while(true) {
+						try {
+							receiveMessage();
+							Thread.sleep(10);
+						} catch(Exception e){ System.out.println(e); }
+					}
+				}
+			});
+			receiverThread.start();
+			
+		} catch(Exception e){ System.out.println(e); }
+	}
+	
+}

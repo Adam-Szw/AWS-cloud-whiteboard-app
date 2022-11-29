@@ -10,26 +10,34 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Server {
 	
 	static final int SERVER_PORT = 6668;
+	static final int UPDATE_TICKRATE = 100;
 	
-	String serverState = "";
 	public int port;
 	public ServerSocket serverSocket;
+	public Lock stateLock = new ReentrantLock();
+	public State updateState;
+	public State stateTotal;
 	
 	List<ClientConnection> connections = new ArrayList<ClientConnection>();
-	Lock clientsUpdatedLock = new ReentrantLock();
-	Boolean clientsUpdated = true;
 	
 	public Server(int port) throws IOException {
 		this.port = port;
+		this.updateState = new State();
+		this.stateTotal = new State();
 		serverSocket = new ServerSocket(port);
 	}
 	
-	public void updateClientStates() throws IOException {
-		System.out.println("updating clients");
+	public void updateClientStates(State state) throws IOException {
+		stateLock.lock();
 		for(ClientConnection connection : connections) {
-			connection.addStateMessage(serverState);
+			connection.sendState(state);
 		}
-		clientsUpdated = true;
+		state.clear();
+		stateLock.unlock();
+	}
+	
+	public void updateOtherServers() {
+		//todo
 	}
 
 	public static void main(String[] args) throws IOException, InterruptedException {
@@ -38,13 +46,8 @@ public class Server {
 		Thread accepterThread = new Thread(accepter);
 		accepterThread.start();
 		while(true) {
-			if(!server.clientsUpdated) {
-				server.clientsUpdatedLock.lock();
-				server.updateClientStates();
-				server.clientsUpdatedLock.unlock();
-			} else {
-				Thread.sleep(10);
-			}
+			server.updateClientStates(server.updateState);
+			Thread.sleep(UPDATE_TICKRATE);
 		}
 	}
 

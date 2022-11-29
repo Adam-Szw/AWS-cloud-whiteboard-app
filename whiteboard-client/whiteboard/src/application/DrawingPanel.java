@@ -26,10 +26,13 @@ public class DrawingPanel extends JComponent {
 	private int oldY;
 	
 	GraphicsImplementer implementer;
+	Synchroniser synchroniser;
 	
-	public DrawingPanel(State state) {
+	public DrawingPanel(Comms comms) {
 		setDoubleBuffered(false);
 		implementer = new GraphicsImplementer(this);
+		this.synchroniser = new Synchroniser(comms, implementer);
+		synchroniser.start();
 		
 		addMouseListener(new MouseAdapter() {
 			public void mousePressed(MouseEvent e) {
@@ -45,13 +48,17 @@ public class DrawingPanel extends JComponent {
 
 		        if (graphics != null) {
 		        	Line line = new Line(new int[] {oldX, oldY}, new int[] {currentX, currentY});
-		        	state.append(line);
+		        	implementer.draw(line);
+		        	synchroniser.updateLock.lock();
+		        	synchroniser.currentUpdate.append(line);
+		        	synchroniser.updateLock.unlock();
 
 					oldX = currentX;
 					oldY = currentY;
 		        }
 			}
 		});
+	
 	}
 	
 	protected void paintComponent(Graphics g) {

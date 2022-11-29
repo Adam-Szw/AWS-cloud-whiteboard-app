@@ -1,0 +1,22 @@
+package whiteboard_server;
+
+import java.util.List;
+
+public class State {
+
+	public String state = "";
+	public List<String> updates;
+	
+	public State() {
+		this.updates = new ArrayList<String>();
+	}
+	
+	public String toString() {
+		return state;
+	}
+	
+	public void updateState(String message) {
+		state += message;
+	}
+	
+}

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
+		<item key="selection" value="fetch"/>
+		<item key="wrap" value="true"/>
+		<item key="casesensitive" value="false"/>
+		<item key="wholeword" value="false"/>
+		<item key="incremental" value="false"/>
+		<item key="isRegEx" value="false"/>
+		<list key="findhistory">
+			<item value="fetch"/>
+			<item value="receiveMessage"/>
+			<item value="sortMessage"/>
+			<item value="system.out"/>
+			<item value="missing"/>
+			<item value="received update"/>
+			<item value="locking"/>
+			<item value="comparing"/>
+			<item value="received new state:"/>
+			<item value="println"/>
+			<item value="update"/>
+			<item value="ACK;ID:2772720499198729218;Line:254,98-&gt;249,101;Line:249,101-&gt;246,104;Line:246,104-&gt;243,106;Line:243,106-&gt;242,109;%UPDATE;ID:1625174029067024554;Line:400,42-&gt;399,42;Line:399,42-&gt;399,43;%UPDATE;ID:408744279893"/>
+			<item value="received new"/>
+		</list>
+		<list key="replacehistory">
+		</list>
+	</section>
+	<section name="org.eclipse.ui.texteditor.FindReplaceDialog_dialogBounds">
+		<item key="DIALOG_X_ORIGIN" value="390"/>
+		<item key="DIALOG_Y_ORIGIN" value="158"/>
+		<item key="DIALOG_WIDTH" value="322"/>
+		<item key="DIALOG_HEIGHT" value="391"/>
+		<item key="DIALOG_FONT_NAME" value="1|Segoe UI|9.0|0|WINDOWS|1|-12|0|0|0|400|0|0|0|1|0|0|0|0|Segoe UI"/>
+	</section>
+</section>
