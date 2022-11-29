@@ -10,7 +10,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Server {
 	
 	static final int SERVER_PORT = 6668;
-	static final int UPDATE_TICKRATE = 5;
+	static final int UPDATE_TICKRATE = 100;
 	
 	public int port;
 	public ServerSocket serverSocket;

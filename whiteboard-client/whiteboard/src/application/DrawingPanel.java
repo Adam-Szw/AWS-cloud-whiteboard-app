@@ -49,7 +49,9 @@ public class DrawingPanel extends JComponent {
 		        if (graphics != null) {
 		        	Line line = new Line(new int[] {oldX, oldY}, new int[] {currentX, currentY});
 		        	implementer.draw(line);
+		        	synchroniser.updateLock.lock();
 		        	synchroniser.currentUpdate.append(line);
+		        	synchroniser.updateLock.unlock();
 
 					oldX = currentX;
 					oldY = currentY;

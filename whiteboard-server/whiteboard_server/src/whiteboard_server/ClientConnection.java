@@ -5,6 +5,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -19,7 +21,7 @@ public class ClientConnection implements Runnable {
 	DataOutputStream dout;
 	
 	Lock messageLock = new ReentrantLock();
-	String message = "";
+	List<String> messages = new ArrayList<String>();
 	
 	public ClientConnection(Server server, int port, ServerSocket ss, Socket s) throws IOException {
 		this.server = server;
@@ -38,7 +40,7 @@ public class ClientConnection implements Runnable {
 				public void run() {
 					while(true) {
 						try {
-							if(!message.equals("")) writeMessage();
+							if(messages.size() != 0) writeMessage();
 							else Thread.sleep(10);
 						} catch(Exception e){System.out.println(e);}
 					}
@@ -63,21 +65,30 @@ public class ClientConnection implements Runnable {
 	
 	void addMessage(String message) {
 		messageLock.lock();
-		this.message += message + "\n";
+		if(messages.size() == 0) messages.add("");
+		String currMsg = messages.get(messages.size() - 1);
+		if(currMsg.length() + message.length() > 10000) {
+			messages.add(message + "\n");
+		} else {
+			messages.set(messages.size() - 1, currMsg + message + "\n");
+		}
 		messageLock.unlock();
 	}
 	
 	void writeMessage() throws IOException {
 		messageLock.lock();
-		dout.writeUTF(message);
-		dout.flush();
-		message = "";
+		while(messages.size() > 0) {
+			dout.writeUTF(messages.get(0));
+			dout.flush();
+			messages.remove(0);
+		}
 		messageLock.unlock();
 	}
 	
 	void receiveMessage() throws IOException {
 		String str = din.readUTF();
 		server.state.updateState(str);
+		System.out.println("server size: " + server.state.updates.size());
 		addMessage("ACK;" + str);
 	}
 }

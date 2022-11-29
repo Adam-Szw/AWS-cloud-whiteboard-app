@@ -3,14 +3,21 @@ package application;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Synchroniser {
 	
+	public Lock updateLock = new ReentrantLock();
 	public UpdateGroup currentUpdate;
+	
+	public Lock stateLock = new ReentrantLock();
 	private List<UpdateGroup> state;
 	
 	private Comms comms;
 	private GraphicsImplementer implementer;
+	
+	public static int CLIENT_TICKRATE = 100;
 	
 	public Synchroniser(Comms comms, GraphicsImplementer implementer) {
 		this.comms = comms;
@@ -26,18 +33,23 @@ public class Synchroniser {
 				while(true) {
 					if(currentUpdate.empty) {
 						try {
-							Thread.sleep(10);
-							continue;
+							Thread.sleep(CLIENT_TICKRATE);
 						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
+						continue;
 					}
 					
 					//send current state change
+					updateLock.lock();
 					comms.messageToSend = currentUpdate.toString();
+					stateLock.lock();
 					state.add(currentUpdate);
+					stateLock.unlock();
 					long groupID = currentUpdate.id;
 					currentUpdate = new UpdateGroup();
+					updateLock.unlock();
 					
 					//wait for confirmation
 					boolean awaitingAck = true;
@@ -51,6 +63,13 @@ public class Synchroniser {
 						comms.messagesLock.unlock();
 					}
 					//todo - timeout if confirmation NOT received
+					
+					try {
+						Thread.sleep(CLIENT_TICKRATE);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 			}
 		});
@@ -61,18 +80,24 @@ public class Synchroniser {
 			public void run() {
 				while(true) {
 					//receive state from server
-					if(comms.stateUpdates.size() == 0) {
+					comms.messagesLock.lock();
+					int i = comms.stateUpdates.size();
+					if(i > 0) {
+						stateLock.lock();
+						compareStates(state, comms.stateUpdates);
+						stateLock.unlock();
+						comms.stateUpdates.clear();
+						comms.messagesLock.unlock();
+					}
+					else {
+						comms.messagesLock.unlock();
 						try {
-							Thread.sleep(10);
+							Thread.sleep(CLIENT_TICKRATE);
 							continue;
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 						}
 					}
-					comms.messagesLock.lock();
-					compareStates(state, comms.stateUpdates);
-					comms.stateUpdates.clear();
-					comms.messagesLock.unlock();
 				}
 			}
 		});
