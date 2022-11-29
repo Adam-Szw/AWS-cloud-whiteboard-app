@@ -7,6 +7,10 @@ public class GraphicsImplementer {
 	
 	DrawingPanel panel;
 	
+	enum ShapeType {
+		line
+	}
+	
 	public GraphicsImplementer(DrawingPanel panel) {
 		this.panel = panel;
 	}
@@ -16,4 +20,23 @@ public class GraphicsImplementer {
 		panel.repaint();
 	}
 
+	public static ShapeType decode(String str) {
+		ShapeType type = null;
+		
+		if(str.length() >= 4 && str.substring(0, 4).equals("Line")) {
+			return ShapeType.line;
+		}
+		return type;
+	}
+	
+	public void implement(UpdateGroup group) {
+		for(int i = 0; i < group.shapes.size(); i++) {
+			Shape shape = group.shapes.get(i);
+			if(shape instanceof Line) {
+				System.out.print("adding missing line");
+				draw((Line) shape);
+			}
+		}
+	}
+	
 }

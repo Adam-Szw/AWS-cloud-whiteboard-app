@@ -1,0 +1,15 @@
+package whiteboard_server;
+
+public class State {
+
+	public String state = "";
+	public long state_id = 0;
+	
+	public String toString() {
+		String str = "";
+		str += "" + state_id + "";
+		str += state;
+		return str;
+	}
+	
+}

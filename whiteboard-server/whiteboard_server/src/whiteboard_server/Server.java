@@ -11,9 +11,9 @@ public class Server {
 	
 	static final int SERVER_PORT = 6668;
 	
-	String serverState = "";
 	public int port;
 	public ServerSocket serverSocket;
+	public State state;
 	
 	List<ClientConnection> connections = new ArrayList<ClientConnection>();
 	Lock clientsUpdatedLock = new ReentrantLock();
@@ -21,15 +21,22 @@ public class Server {
 	
 	public Server(int port) throws IOException {
 		this.port = port;
+		this.state = new State();
 		serverSocket = new ServerSocket(port);
 	}
 	
 	public void updateClientStates() throws IOException {
 		System.out.println("updating clients");
 		for(ClientConnection connection : connections) {
-			connection.addStateMessage(serverState);
+			for(int i = 0; i < state.updates.size(); i++) {
+				connection.addMessage("UPDATE;" + state.updates.get(i));
+			}
 		}
 		clientsUpdated = true;
+	}
+	
+	public void updateOtherServers() {
+		//todo
 	}
 
 	public static void main(String[] args) throws IOException, InterruptedException {

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename method &apos;whiteboard_server.ClientConnection.addStateMessage(...)&apos; to &apos;addMessage&apos;&#x0D;&#x0A;- Original project: &apos;whiteboard_server&apos;&#x0D;&#x0A;- Original element: &apos;whiteboard_server.ClientConnection.addStateMessage(...)&apos;&#x0D;&#x0A;- Renamed element: &apos;whiteboard_server.ClientConnection.addMessage(...)&apos;&#x0D;&#x0A;- Update references to refactored element" delegate="false" deprecate="false" description="Rename method &apos;addStateMessage&apos;" flags="589830" id="org.eclipse.jdt.ui.rename.method" input="/src&lt;whiteboard_server{ClientConnection.java[ClientConnection~addStateMessage~QString;" name="addMessage" references="true" stamp="1669688328463" version="1.0"/>
+</session>

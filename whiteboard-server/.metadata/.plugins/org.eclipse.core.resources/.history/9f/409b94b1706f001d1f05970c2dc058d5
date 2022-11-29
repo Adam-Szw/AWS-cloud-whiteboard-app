@@ -1,0 +1,7 @@
+package whiteboard_server;
+
+public class State {
+
+	String state = "";
+	
+}
