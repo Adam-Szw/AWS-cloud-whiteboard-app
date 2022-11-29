@@ -90,7 +90,6 @@ public class Synchroniser {
 						comms.stateUpdates.clear();
 						//Mismatch detected - fetch full history
 						if(currentStateID < comms.serverStateID) {
-							System.out.println("Mismatch detected: " + currentStateID + "/" + comms.serverStateID);
 							comms.addMessage("FETCH_HISTORY;");
 						}
 						stateLock.unlock();
