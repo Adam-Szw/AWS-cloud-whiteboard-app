@@ -33,7 +33,6 @@ public class GraphicsImplementer {
 		for(int i = 0; i < group.shapes.size(); i++) {
 			Shape shape = group.shapes.get(i);
 			if(shape instanceof Line) {
-				System.out.print("adding missing line");
 				draw((Line) shape);
 			}
 		}

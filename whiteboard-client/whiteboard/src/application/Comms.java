@@ -38,7 +38,6 @@ public class Comms implements Runnable {
 	
 	void receiveMessage() throws IOException {
 		String response = din.readUTF();
-		System.out.print("Server sent response: " + response);
 		messagesLock.lock();
 		String[] responses = response.split("\n");
 		for(String msg : responses) {

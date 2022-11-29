@@ -38,7 +38,6 @@ public class Synchroniser {
 					state.add(currentUpdate);
 					long groupID = currentUpdate.id;
 					currentUpdate = new UpdateGroup();
-					System.out.println("awaiting confirmation for:" + groupID);
 					
 					//wait for confirmation
 					boolean awaitingAck = true;
@@ -48,7 +47,6 @@ public class Synchroniser {
 						if(i != -1) {
 							awaitingAck = false;
 							comms.confirmations.remove(i);
-							System.out.println("confirmation received for:" + groupID);
 						}
 						comms.messagesLock.unlock();
 					}
