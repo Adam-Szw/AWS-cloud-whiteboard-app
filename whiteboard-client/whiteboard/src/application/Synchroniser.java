@@ -13,6 +13,7 @@ public class Synchroniser {
 	
 	public Lock stateLock = new ReentrantLock();
 	private List<UpdateGroup> state;
+	private long currentStateID = 0;
 	
 	private Comms comms;
 	private GraphicsImplementer implementer;
@@ -43,7 +44,7 @@ public class Synchroniser {
 					
 					//send current state change
 					updateLock.lock();
-					comms.messageToSend = currentUpdate.toString();
+					comms.addMessage(currentUpdate.toString());
 					stateLock.lock();
 					state.add(currentUpdate);
 					stateLock.unlock();
@@ -58,6 +59,7 @@ public class Synchroniser {
 						int i = comms.confirmations.indexOf(groupID);
 						if(i != -1) {
 							awaitingAck = false;
+							currentStateID++;
 							comms.confirmations.remove(i);
 						}
 						comms.messagesLock.unlock();
@@ -82,11 +84,16 @@ public class Synchroniser {
 					//receive state from server
 					comms.messagesLock.lock();
 					int i = comms.stateUpdates.size();
-					if(i > 0) {
+					if(i > 0 || currentStateID < comms.serverStateID) {
 						stateLock.lock();
 						compareStates(state, comms.stateUpdates);
-						stateLock.unlock();
 						comms.stateUpdates.clear();
+						//Mismatch detected - fetch full history
+						if(currentStateID < comms.serverStateID) {
+							System.out.println("Mismatch detected: " + currentStateID + "/" + comms.serverStateID);
+							comms.addMessage("FETCH_HISTORY;");
+						}
+						stateLock.unlock();
 						comms.messagesLock.unlock();
 					}
 					else {
@@ -104,24 +111,24 @@ public class Synchroniser {
 		stateReceiver.start();
 	}
 	
-	public void compareStates(List<UpdateGroup> state, List<UpdateGroup> update) {
+	public void compareStates(List<UpdateGroup> state, List<UpdateGroup> updates) {
 		Collections.sort(state);
-		Collections.sort(update);
+		Collections.sort(updates);
 		//check for missing update IDs and implement gaps
-		for(int i = 0; i < update.size(); i++) {
+		for(int i = 0; i < updates.size(); i++) {
 			boolean found = false;
 			for(int j = 0; j < state.size(); j++) {
-				if(state.get(j).id == update.get(i).id) {
+				if(state.get(j).id == updates.get(i).id) {
 					found = true;
 					break;
 				}
 			}
 			if(!found) {
-				state.add(update.get(i));
-				implementer.implement(update.get(i));
+				state.add(updates.get(i));
+				implementer.implement(updates.get(i));
+				currentStateID++;
 			}
 		}
-		
 	}
 
 }

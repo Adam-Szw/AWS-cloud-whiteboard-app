@@ -6,6 +6,7 @@ import java.util.List;
 public class State {
 
 	public List<String> updates;
+	public long stateID = 0;
 	
 	public State() {
 		this.updates = new ArrayList<String>();
@@ -13,6 +14,11 @@ public class State {
 	
 	public void updateState(String message) {
 		updates.add(message);
+		stateID++;
+	}
+	
+	public void clear() {
+		updates.clear();
 	}
 	
 }

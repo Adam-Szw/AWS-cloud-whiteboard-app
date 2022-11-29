@@ -63,6 +63,13 @@ public class ClientConnection implements Runnable {
 		} catch(Exception e){System.out.println(e);}
 	}
 	
+	public void sendState(State state) {
+		for(int i = 0; i < state.updates.size(); i++) {
+			addMessage("UPDATE;" + state.updates.get(i));
+		}
+		addMessage("COUNT;" + state.stateID + ";");
+	}
+	
 	void addMessage(String message) {
 		messageLock.lock();
 		if(messages.size() == 0) messages.add("");
@@ -87,8 +94,23 @@ public class ClientConnection implements Runnable {
 	
 	void receiveMessage() throws IOException {
 		String str = din.readUTF();
-		server.state.updateState(str);
-		System.out.println("server size: " + server.state.updates.size());
-		addMessage("ACK;" + str);
+		server.stateLock.lock();
+		String update = "";
+		for(String msg : str.replace(";", ";@").split("@")) {
+			System.out.println("msg: " + msg);
+			if(msg.length() >= 14 && msg.substring(0, 14).equals("FETCH_HISTORY;")) {
+				System.out.println("fetching total state");
+				sendState(server.stateTotal);
+			} else {
+				update += msg;
+			}
+		}
+		if(!update.equals("")) {
+			System.out.println("updating: " + update);
+			server.updateState.updateState(update);
+			server.stateTotal.updateState(update);
+			addMessage("ACK;" + update);
+		}
+		server.stateLock.unlock();
 	}
 }

@@ -18,4 +18,6 @@
     <fullyQualifiedTypeName name="java.util.concurrent.locks.Lock"/>
     <fullyQualifiedTypeName name="application.GraphicsImplementer.ShapeType"/>
     <fullyQualifiedTypeName name="application.drawings.Line"/>
+    <fullyQualifiedTypeName name="java.util.Arrays"/>
+    <fullyQualifiedTypeName name="java.util.Collections"/>
 </qualifiedTypeNameHistroy>

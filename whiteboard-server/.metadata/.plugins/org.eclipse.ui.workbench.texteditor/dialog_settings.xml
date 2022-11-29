@@ -6,8 +6,12 @@
 		<item key="wholeword" value="false"/>
 		<item key="incremental" value="false"/>
 		<item key="isRegEx" value="false"/>
-		<item key="selection" value="ack"/>
+		<item key="selection" value=""/>
 		<list key="findhistory">
+			<item value="system.out"/>
+			<item value="update"/>
+			<item value="%%"/>
+			<item value="%"/>
 			<item value="ack"/>
 			<item value="sendState"/>
 		</list>
@@ -15,7 +19,7 @@
 		</list>
 	</section>
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog_dialogBounds">
-		<item key="DIALOG_X_ORIGIN" value="807"/>
+		<item key="DIALOG_X_ORIGIN" value="738"/>
 		<item key="DIALOG_Y_ORIGIN" value="268"/>
 		<item key="DIALOG_WIDTH" value="322"/>
 		<item key="DIALOG_HEIGHT" value="391"/>

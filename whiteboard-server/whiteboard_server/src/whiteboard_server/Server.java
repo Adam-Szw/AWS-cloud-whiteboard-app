@@ -14,22 +14,26 @@ public class Server {
 	
 	public int port;
 	public ServerSocket serverSocket;
-	public State state;
+	public Lock stateLock = new ReentrantLock();
+	public State updateState;
+	public State stateTotal;
 	
 	List<ClientConnection> connections = new ArrayList<ClientConnection>();
 	
 	public Server(int port) throws IOException {
 		this.port = port;
-		this.state = new State();
+		this.updateState = new State();
+		this.stateTotal = new State();
 		serverSocket = new ServerSocket(port);
 	}
 	
-	public void updateClientStates() throws IOException {
+	public void updateClientStates(State state) throws IOException {
+		stateLock.lock();
 		for(ClientConnection connection : connections) {
-			for(int i = 0; i < state.updates.size(); i++) {
-				connection.addMessage("UPDATE;" + state.updates.get(i));
-			}
+			connection.sendState(state);
 		}
+		state.clear();
+		stateLock.unlock();
 	}
 	
 	public void updateOtherServers() {
@@ -42,7 +46,7 @@ public class Server {
 		Thread accepterThread = new Thread(accepter);
 		accepterThread.start();
 		while(true) {
-			server.updateClientStates();
+			server.updateClientStates(server.updateState);
 			Thread.sleep(UPDATE_TICKRATE);
 		}
 	}

@@ -17,11 +17,13 @@ public class Comms implements Runnable {
 	DataInputStream din;
 	DataOutputStream dout;
 	
-	public String messageToSend = "";
+	private String messageToSend = "";
+	private Lock messageSendLock = new ReentrantLock();
 	
 	public Lock messagesLock = new ReentrantLock();
 	public List<Long> confirmations;
 	public List<UpdateGroup> stateUpdates;
+	public long serverStateID = 0;
 	
 	public Comms(String host, int port) {
 		this.host = host;
@@ -30,10 +32,18 @@ public class Comms implements Runnable {
 		this.stateUpdates = new ArrayList<UpdateGroup>();
 	}
 	
+	void addMessage(String str) {
+		messageSendLock.lock();
+		messageToSend += str;
+		messageSendLock.unlock();
+	}
+	
 	void postMessage() throws IOException {
+		messageSendLock.lock();
 		dout.writeUTF(messageToSend);
 		dout.flush();
 		messageToSend = "";
+		messageSendLock.unlock();
 	}
 	
 	void receiveMessage() throws IOException {
@@ -63,6 +73,12 @@ public class Comms implements Runnable {
 				newUpdate.append(str);
 			}
 			stateUpdates.add(newUpdate);
+		}
+		
+		if(msg.length() >= 6 && msg.substring(0, 6).equals("COUNT;")) {
+			int idend = msg.indexOf(";", 6);
+			String str = msg.substring(6, idend);
+			serverStateID = Math.max(serverStateID, Long.parseLong(str));
 		}
 	}
 
