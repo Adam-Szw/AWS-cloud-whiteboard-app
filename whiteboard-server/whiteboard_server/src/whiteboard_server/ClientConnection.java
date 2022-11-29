@@ -97,6 +97,7 @@ public class ClientConnection implements Runnable {
 		server.stateLock.lock();
 		String update = "";
 		for(String msg : str.replace(";", ";@").split("@")) {
+			System.out.println("msg: " + msg);
 			if(msg.length() >= 14 && msg.substring(0, 14).equals("FETCH_HISTORY;")) {
 				sendState(server.stateTotal);
 			} else {

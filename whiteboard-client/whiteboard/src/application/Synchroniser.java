@@ -3,6 +3,7 @@ package application;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -88,12 +89,24 @@ public class Synchroniser {
 						stateLock.lock();
 						compareStates(state, comms.stateUpdates);
 						comms.stateUpdates.clear();
+						boolean awaitingAck = false;
+						long id = 0;
 						//Mismatch detected - fetch full history
 						if(currentStateID < comms.serverStateID) {
-							comms.addMessage("FETCH_HISTORY;");
+							System.out.println("Mismatch detected: " + currentStateID + "/" + comms.serverStateID);
+							id = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
+							comms.addMessage("FETCH_HISTORY;ID:" + id + ";");
+							awaitingAck = true;
 						}
 						stateLock.unlock();
 						comms.messagesLock.unlock();
+						//Block the thread while we wait for confirmation
+						while(awaitingAck) {
+							comms.messagesLock.lock();
+							int j = comms.confirmations.indexOf(id);
+							if(j != -1) awaitingAck = false;
+							comms.messagesLock.unlock();
+						}
 					}
 					else {
 						comms.messagesLock.unlock();
