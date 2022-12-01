@@ -7,7 +7,13 @@ import java.util.concurrent.ThreadLocalRandom;
 import application.drawings.Line;
 import application.drawings.Shape;
 
-
+/**
+ * Class for grouping updates together. Updates are the shapes that need to be
+ * drawn in order to replicate the state of the board. It has ID for synchronisation purposes.
+ * 
+ * @author aks60
+ *
+ */
 public class UpdateGroup implements Comparable<UpdateGroup> {
 	
 	public List<Shape> shapes;

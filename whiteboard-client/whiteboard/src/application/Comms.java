@@ -9,6 +9,12 @@ import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+/**
+ * Communication with the server
+ * 
+ * @author aks60
+ *
+ */
 public class Comms implements Runnable {
 	
 	String host;

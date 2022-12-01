@@ -7,6 +7,12 @@ import javax.swing.JFrame;
 
 import application.drawings.Line;
 
+/**
+ * Main class
+ * 
+ * @author aks60
+ *
+ */
 public class App {
 	
 	public static void main(String[] args) {

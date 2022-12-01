@@ -2,33 +2,38 @@ package whiteboard_server;
 
 import java.net.Socket;
 
+/**
+ * Creates client connections.
+ * 
+ * @author aks60
+ * 
+ */
 public class ClientAccepter implements Runnable {
 
-	Server server;
-	int port;
-	
-	boolean close = false;
+	private Server server;
 	
 	public ClientAccepter(Server server) {
 		this.server = server;
-		this.port = server.port;
 	}
 	
 	@Override
 	public void run() {
-		while(!close) {
+		while(true) {
+			/*
+			 * Await client to connect and if received - create new connection execution
+			 */
 			try {
 				Socket clientSocket = server.serverSocket.accept();
-				ClientConnection connection = new ClientConnection(server, port, server.serverSocket, clientSocket);
+				if(Server.DEBUG_MODE) System.out.println("New client connection established");
+				ClientConnection connection = new ClientConnection(server, clientSocket);
 				Thread connThread = new Thread(connection);
 				connThread.start();
-				server.connections.add(connection);
-			} catch(Exception e){System.out.println(e);}
+				server.clientConnections.add(connection);
+			} catch(Exception e){
+				System.out.println("Client connection error");
+				e.printStackTrace();
+			}
 		}
-	}
-	
-	public void close() {
-		close = true;
 	}
 
 }

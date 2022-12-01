@@ -7,6 +7,13 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+/**
+ * This class is responsible for managing the state of the application
+ * by communicating with the server. This is where 'the magic' happens essentially
+ * 
+ * @author aks60
+ *
+ */
 public class Synchroniser {
 	
 	public Lock updateLock = new ReentrantLock();

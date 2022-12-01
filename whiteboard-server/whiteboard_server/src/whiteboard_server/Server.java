@@ -7,10 +7,17 @@ import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+/**
+ * Main server class that creates and manages connections as well as synchronising
+ * state updates accross clients and other servers.
+ * 
+ * @author aks60
+ *
+ */
 public class Server {
 	
-	static final int SERVER_PORT = 6668;
-	static final int UPDATE_TICKRATE = 100;
+	final int UPDATE_TICKRATE = 100;
+	public static final boolean DEBUG_MODE = true;
 	
 	public int port;
 	public ServerSocket serverSocket;
@@ -18,7 +25,7 @@ public class Server {
 	public State updateState;
 	public State stateTotal;
 	
-	List<ClientConnection> connections = new ArrayList<ClientConnection>();
+	List<ClientConnection> clientConnections = new ArrayList<ClientConnection>();
 	
 	public Server(int port) throws IOException {
 		this.port = port;
@@ -27,9 +34,10 @@ public class Server {
 		serverSocket = new ServerSocket(port);
 	}
 	
+	// Sends a state change to all clients connected
 	public void updateClientStates(State state) throws IOException {
 		stateLock.lock();
-		for(ClientConnection connection : connections) {
+		for(ClientConnection connection : clientConnections) {
 			connection.sendState(state);
 		}
 		state.clear();
@@ -41,14 +49,19 @@ public class Server {
 	}
 
 	public static void main(String[] args) throws IOException, InterruptedException {
-		Server server = new Server(SERVER_PORT);
+		Server server = new Server(6668);
+		
+		// Create and start threads for various operations
 		ClientAccepter accepter = new ClientAccepter(server);
 		Thread accepterThread = new Thread(accepter);
 		accepterThread.start();
-		while(true) {
-			server.updateClientStates(server.updateState);
-			Thread.sleep(UPDATE_TICKRATE);
-		}
+		ConnectionChecker checker = new ConnectionChecker(server);
+		Thread checkThread = new Thread(checker);
+		checkThread.start();
+		ClientUpdater updater = new ClientUpdater(server);
+		Thread updateThread = new Thread(updater);
+		updateThread.start();
+
 	}
 
 }

@@ -3,6 +3,12 @@ package application;
 import application.drawings.Line;
 import application.drawings.Shape;
 
+/**
+ * Actual drawing in on the board happens here
+ * 
+ * @author aks60
+ *
+ */
 public class GraphicsImplementer {
 	
 	DrawingPanel panel;

@@ -1,5 +1,10 @@
 package application.drawings;
 
+/**
+ * 
+ * @author aks60
+ *
+ */
 public class Line extends Shape {
 	
 	public int[] start;

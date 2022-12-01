@@ -14,7 +14,13 @@ import javax.swing.JComponent;
 import application.drawings.Line;
 
 
-
+/**
+ * Drawing panel object that takes in user input
+ * 
+ * @author aks60
+ *
+ */
+@SuppressWarnings("serial")
 public class DrawingPanel extends JComponent {
 
 	private Image image;
