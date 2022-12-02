@@ -25,12 +25,7 @@ public class ConnectionChecker implements Runnable {
 				break;
 			}
 		}
-		try {
-			Thread.sleep(server.UPDATE_TICKRATE);
-		} catch (InterruptedException e) {
-			System.out.println("Connection checker thread interrupted");
-			e.printStackTrace();
-		}
+		Server.sleepThread("Connection checker thread", Server.UPDATE_TICKRATE);
 	}
 
 }

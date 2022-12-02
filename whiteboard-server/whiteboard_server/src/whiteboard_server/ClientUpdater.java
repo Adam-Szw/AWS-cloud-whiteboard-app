@@ -21,12 +21,9 @@ public class ClientUpdater implements Runnable {
 		while(true) {
 			try {
 				server.updateClientStates(server.updateState);
-				Thread.sleep(server.UPDATE_TICKRATE);
+				Server.sleepThread("Updater thread", Server.UPDATE_TICKRATE);
 			} catch (IOException e) {
 				System.out.println("Error encountered while updating clients");
-				e.printStackTrace();
-			} catch (InterruptedException e) {
-				System.out.println("Updater thread interrupted");
 				e.printStackTrace();
 			}
 		}

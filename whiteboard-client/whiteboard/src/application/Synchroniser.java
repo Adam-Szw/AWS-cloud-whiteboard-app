@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * This class is responsible for managing the state of the application
@@ -16,70 +14,34 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class Synchroniser {
 	
-	public Lock updateLock = new ReentrantLock();
-	public UpdateGroup currentUpdate;
-	
-	public Lock stateLock = new ReentrantLock();
-	private List<UpdateGroup> state;
-	private long currentStateID = 0;
-	
 	private Comms comms;
 	private GraphicsImplementer implementer;
+	private State state;
 	
-	public static int CLIENT_TICKRATE = 100;
-	
-	public Synchroniser(Comms comms, GraphicsImplementer implementer) {
+	public Synchroniser(State state, Comms comms, GraphicsImplementer implementer) {
+		this.state = state;
 		this.comms = comms;
 		this.implementer = implementer;
-		currentUpdate = new UpdateGroup();
-		state = new ArrayList<UpdateGroup>();
+		state.currentUpdate = new UpdateGroup();
+		state.totalState = new ArrayList<UpdateGroup>();
 	}
 	
 	public void start() {
 		Thread stateUploader = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				while(true) {
-					if(currentUpdate.empty) {
-						try {
-							Thread.sleep(CLIENT_TICKRATE);
-						} catch (InterruptedException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
+				while(!comms.closed) {
+					if(state.currentUpdate.empty) {
+						App.sleepThread("State sender", App.CLIENT_TICKRATE);
 						continue;
 					}
 					
 					//send current state change
-					updateLock.lock();
-					comms.addMessage(currentUpdate.toString());
-					stateLock.lock();
-					state.add(currentUpdate);
-					stateLock.unlock();
-					long groupID = currentUpdate.id;
-					currentUpdate = new UpdateGroup();
-					updateLock.unlock();
-					
+					long groupID = sendStateUpdate();
 					//wait for confirmation
-					boolean awaitingAck = true;
-					while(awaitingAck) {
-						comms.messagesLock.lock();
-						int i = comms.confirmations.indexOf(groupID);
-						if(i != -1) {
-							awaitingAck = false;
-							currentStateID++;
-							comms.confirmations.remove(i);
-						}
-						comms.messagesLock.unlock();
-					}
-					//todo - timeout if confirmation NOT received
+					confirmStateReceived(groupID);
 					
-					try {
-						Thread.sleep(CLIENT_TICKRATE);
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+					App.sleepThread("State sender", App.CLIENT_TICKRATE);
 				}
 			}
 		});
@@ -88,41 +50,40 @@ public class Synchroniser {
 		Thread stateReceiver = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				while(true) {
+				while(!comms.closed) {
 					//receive state from server
 					comms.messagesLock.lock();
 					int i = comms.stateUpdates.size();
-					if(i > 0 || currentStateID < comms.serverStateID) {
-						stateLock.lock();
-						compareStates(state, comms.stateUpdates);
+					if(i > 0 || state.currentStateID < comms.serverStateID) {
+						state.stateLock.lock();
+						compareStates(state.totalState, comms.stateUpdates);
 						comms.stateUpdates.clear();
 						boolean awaitingAck = false;
 						long id = 0;
 						//Mismatch detected - fetch full history
-						if(currentStateID < comms.serverStateID) {
-							System.out.println("Mismatch detected: " + currentStateID + "/" + comms.serverStateID);
+						if(state.currentStateID < comms.serverStateID) {
+							if(App.DEBUG_MODE) System.out.println(
+									"Mismatch detected: " + state.currentStateID + "/" + comms.serverStateID + ", requesting full state");
 							id = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
 							comms.addMessage("FETCH_HISTORY;ID:" + id + ";");
 							awaitingAck = true;
 						}
-						stateLock.unlock();
+						state.stateLock.unlock();
 						comms.messagesLock.unlock();
 						//Block the thread while we wait for confirmation
 						while(awaitingAck) {
 							comms.messagesLock.lock();
 							int j = comms.confirmations.indexOf(id);
-							if(j != -1) awaitingAck = false;
+							if(j != -1) {
+								awaitingAck = false;
+								if(App.DEBUG_MODE) System.out.println("Full state request accepted by the server");
+							}
 							comms.messagesLock.unlock();
 						}
 					}
 					else {
 						comms.messagesLock.unlock();
-						try {
-							Thread.sleep(CLIENT_TICKRATE);
-							continue;
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
+						App.sleepThread("State receiver", App.CLIENT_TICKRATE);
 					}
 				}
 			}
@@ -130,22 +91,49 @@ public class Synchroniser {
 		stateReceiver.start();
 	}
 	
-	public void compareStates(List<UpdateGroup> state, List<UpdateGroup> updates) {
-		Collections.sort(state);
+	public long sendStateUpdate() {
+		state.updateLock.lock();
+		comms.addMessage(state.currentUpdate.toString());
+		state.stateLock.lock();
+		state.totalState.add(state.currentUpdate);
+		state.stateLock.unlock();
+		long groupID = state.currentUpdate.id;
+		state.currentUpdate = new UpdateGroup();
+		state.updateLock.unlock();
+		return groupID;
+	}
+	
+	public void confirmStateReceived(long id) {
+		boolean awaitingAck = true;
+		while(awaitingAck) {
+			comms.messagesLock.lock();
+			int i = comms.confirmations.indexOf(id);
+			if(i != -1) {
+				awaitingAck = false;
+				state.currentStateID++;
+				comms.confirmations.remove(i);
+			}
+			comms.messagesLock.unlock();
+		}
+		//todo - timeout if confirmation NOT received
+	}
+	
+	public void compareStates(List<UpdateGroup> current, List<UpdateGroup> updates) {
+		Collections.sort(current);
 		Collections.sort(updates);
 		//check for missing update IDs and implement gaps
 		for(int i = 0; i < updates.size(); i++) {
 			boolean found = false;
-			for(int j = 0; j < state.size(); j++) {
-				if(state.get(j).id == updates.get(i).id) {
+			for(int j = 0; j < current.size(); j++) {
+				if(current.get(j).id == updates.get(i).id) {
 					found = true;
 					break;
 				}
 			}
 			if(!found) {
-				state.add(updates.get(i));
+				current.add(updates.get(i));
 				implementer.implement(updates.get(i));
-				currentStateID++;
+				state.currentStateID++;
 			}
 		}
 	}

@@ -50,12 +50,7 @@ public class ClientConnection implements Runnable {
 				while(!closed) {
 					if(messages.size() != 0) writeMessage();
 					else {
-						try {
-							Thread.sleep(10);
-						} catch (InterruptedException e) {
-							System.out.println("Responder thread interrupted");
-							e.printStackTrace();
-						}
+						Server.sleepThread("Responder thread", Server.COMMS_TICKRATE);
 					}
 				}
 			}

@@ -16,7 +16,8 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class Server {
 	
-	final int UPDATE_TICKRATE = 100;
+	public static final int UPDATE_TICKRATE = 100;
+	public static final int COMMS_TICKRATE = 10;
 	public static final boolean DEBUG_MODE = true;
 	
 	public int port;
@@ -32,6 +33,15 @@ public class Server {
 		this.updateState = new State();
 		this.stateTotal = new State();
 		serverSocket = new ServerSocket(port);
+	}
+	
+	public static void sleepThread(String err, int tickrate) {
+		try {
+			Thread.sleep(tickrate);
+		} catch (InterruptedException e) {
+			System.out.println(err + " thread interrupted");
+			e.printStackTrace();
+		}
 	}
 	
 	// Sends a state change to all clients connected
