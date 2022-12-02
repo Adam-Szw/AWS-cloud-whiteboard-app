@@ -3,6 +3,7 @@ package application;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
@@ -74,7 +75,12 @@ public class Comms implements Runnable {
 			});
 			receiverThread.start();
 			
-		} catch(Exception e){ System.out.println(e); }
+		} catch(ConnectException e) {
+			closed = true;
+		} catch(Exception e){
+			System.out.println("Error encountered while connecting to the server");
+			e.printStackTrace();
+		}
 	}
 	
 	void addMessage(String str) {
@@ -86,11 +92,11 @@ public class Comms implements Runnable {
 	void postMessage() {
 		try {
 			messageSendLock.lock();
-			dout.writeUTF(messageToSend);
 			if(messageToSend.equals("")) {
 				messageSendLock.unlock();
 				return;
 			}
+			dout.writeUTF(messageToSend);
 			dout.flush();
 			messageToSend = "";
 			messageSendLock.unlock();

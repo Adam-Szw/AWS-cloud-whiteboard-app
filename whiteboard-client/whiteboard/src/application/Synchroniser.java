@@ -14,13 +14,17 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public class Synchroniser {
 	
-	private Comms comms;
+	private Connector connector;
 	private GraphicsImplementer implementer;
 	private State state;
 	
-	public Synchroniser(State state, Comms comms, GraphicsImplementer implementer) {
+	private boolean firstTimeCheck = true;
+	
+	public boolean closed = false;
+	
+	public Synchroniser(State state, Connector connector, GraphicsImplementer implementer) {
 		this.state = state;
-		this.comms = comms;
+		this.connector = connector;
 		this.implementer = implementer;
 		state.currentUpdate = new UpdateGroup();
 		state.totalState = new ArrayList<UpdateGroup>();
@@ -30,12 +34,15 @@ public class Synchroniser {
 		Thread stateUploader = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				while(!comms.closed) {
+				while(!closed) {
+					if(connector.comms.closed) {
+						App.sleepThread("State sender", App.CLIENT_TICKRATE);
+						continue;
+					}
 					if(state.currentUpdate.empty) {
 						App.sleepThread("State sender", App.CLIENT_TICKRATE);
 						continue;
 					}
-					
 					//send current state change
 					long groupID = sendStateUpdate();
 					//wait for confirmation
@@ -50,39 +57,50 @@ public class Synchroniser {
 		Thread stateReceiver = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				while(!comms.closed) {
+				while(!closed) {
+					if(connector.comms.closed) {
+						firstTimeCheck = true;
+						App.sleepThread("State receiver", App.CLIENT_TICKRATE);
+						continue;
+					}
 					//receive state from server
-					comms.messagesLock.lock();
-					int i = comms.stateUpdates.size();
-					if(i > 0 || state.currentStateID < comms.serverStateID) {
+					connector.comms.messagesLock.lock();
+					int i = connector.comms.stateUpdates.size();
+					if(i > 0 || state.currentStateID < connector.comms.serverStateID || firstTimeCheck) {
 						state.stateLock.lock();
-						compareStates(state.totalState, comms.stateUpdates);
-						comms.stateUpdates.clear();
+						compareStates(state.totalState, connector.comms.stateUpdates);
+						connector.comms.stateUpdates.clear();
 						boolean awaitingAck = false;
 						long id = 0;
 						//Mismatch detected - fetch full history
-						if(state.currentStateID < comms.serverStateID) {
+						if(state.currentStateID < connector.comms.serverStateID ||
+								state.currentStateID > connector.comms.serverStateID + 1
+								|| firstTimeCheck) {
 							if(App.DEBUG_MODE) System.out.println(
-									"Mismatch detected: " + state.currentStateID + "/" + comms.serverStateID + ", requesting full state");
+									"Mismatch detected: " + state.currentStateID + "/" +
+											connector.comms.serverStateID + ", requesting full state");
 							id = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
-							comms.addMessage("FETCH_HISTORY;ID:" + id + ";");
+							connector.comms.addMessage("FETCH_HISTORY;ID:" + id + ";");
 							awaitingAck = true;
 						}
 						state.stateLock.unlock();
-						comms.messagesLock.unlock();
+						connector.comms.messagesLock.unlock();
 						//Block the thread while we wait for confirmation
 						while(awaitingAck) {
-							comms.messagesLock.lock();
-							int j = comms.confirmations.indexOf(id);
+							connector.comms.messagesLock.lock();
+							int j = connector.comms.confirmations.indexOf(id);
 							if(j != -1) {
 								awaitingAck = false;
+								implementer.clear();
+								state.clear();
 								if(App.DEBUG_MODE) System.out.println("Full state request accepted by the server");
 							}
-							comms.messagesLock.unlock();
+							connector.comms.messagesLock.unlock();
 						}
+						firstTimeCheck = false;
 					}
 					else {
-						comms.messagesLock.unlock();
+						connector.comms.messagesLock.unlock();
 						App.sleepThread("State receiver", App.CLIENT_TICKRATE);
 					}
 				}
@@ -93,7 +111,7 @@ public class Synchroniser {
 	
 	public long sendStateUpdate() {
 		state.updateLock.lock();
-		comms.addMessage(state.currentUpdate.toString());
+		connector.comms.addMessage(state.currentUpdate.toString());
 		state.stateLock.lock();
 		state.totalState.add(state.currentUpdate);
 		state.stateLock.unlock();
@@ -106,16 +124,15 @@ public class Synchroniser {
 	public void confirmStateReceived(long id) {
 		boolean awaitingAck = true;
 		while(awaitingAck) {
-			comms.messagesLock.lock();
-			int i = comms.confirmations.indexOf(id);
+			connector.comms.messagesLock.lock();
+			int i = connector.comms.confirmations.indexOf(id);
 			if(i != -1) {
 				awaitingAck = false;
 				state.currentStateID++;
-				comms.confirmations.remove(i);
+				connector.comms.confirmations.remove(i);
 			}
-			comms.messagesLock.unlock();
+			connector.comms.messagesLock.unlock();
 		}
-		//todo - timeout if confirmation NOT received
 	}
 	
 	public void compareStates(List<UpdateGroup> current, List<UpdateGroup> updates) {
@@ -136,6 +153,10 @@ public class Synchroniser {
 				state.currentStateID++;
 			}
 		}
+	}
+	
+	public void close() {
+		closed = true;
 	}
 
 }

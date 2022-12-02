@@ -28,23 +28,23 @@ public class App {
 	}
 	
 	public static void main(String[] args) {
-		// this is where we decide which server to connect to
-		// based on servers load
-	    Comms comms = new Comms("localhost", 6668);
-	    Thread commThread = new Thread(comms);
+		Connector connector = new Connector();
 		
 	    JFrame frame = new JFrame("Whiteboard App");
 	    Container content = frame.getContentPane();
 	    content.setLayout(new BorderLayout());
 
-	    DrawingPanel panel = new DrawingPanel(comms);
+	    DrawingPanel panel = new DrawingPanel(connector);
 	    content.add(panel, BorderLayout.CENTER);
 	    
 	    frame.setSize(800, 600);
 	    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	    frame.setVisible(true);
 	    
-	    commThread.start();
+	    // Its important that this is called AFTER creating panel
+		Thread connectorThread = new Thread(connector);
+		connectorThread.start();
+	    
 	}
 
 }

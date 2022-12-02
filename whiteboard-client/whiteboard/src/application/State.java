@@ -20,4 +20,14 @@ public class State {
 	public List<UpdateGroup> totalState = new ArrayList<UpdateGroup>();
 	public long currentStateID = 0;
 	
+	public void clear() {
+		updateLock.lock();
+		stateLock.lock();
+		totalState = new ArrayList<UpdateGroup>();
+		currentStateID = 0;
+		currentUpdate = new UpdateGroup();
+		updateLock.unlock();
+		stateLock.unlock();
+	}
+	
 }

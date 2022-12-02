@@ -36,11 +36,11 @@ public class DrawingPanel extends JComponent {
 	GraphicsImplementer implementer;
 	Synchroniser synchroniser;
 	
-	public DrawingPanel(Comms comms) {
+	public DrawingPanel(Connector connector) {
 		state = new State();
 		setDoubleBuffered(false);
 		implementer = new GraphicsImplementer(this);
-		this.synchroniser = new Synchroniser(state, comms, implementer);
+		this.synchroniser = new Synchroniser(state, connector, implementer);
 		synchroniser.start();
 		
 		addMouseListener(new MouseAdapter() {

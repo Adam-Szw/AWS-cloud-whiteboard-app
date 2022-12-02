@@ -67,6 +67,9 @@ public class ClientConnection implements Runnable {
 			}
 		});
 		receiver.start();
+		
+		Server.sleepThread("Client connection", Server.UPDATE_TICKRATE);
+		sendState(server.stateTotal);
 	}
 	
 	// Sends a message about new state of the system

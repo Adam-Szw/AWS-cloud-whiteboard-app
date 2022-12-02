@@ -44,4 +44,8 @@ public class GraphicsImplementer {
 		}
 	}
 	
+	public void clear() {
+		panel.clear();
+	}
+	
 }
