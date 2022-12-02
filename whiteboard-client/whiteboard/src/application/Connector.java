@@ -21,9 +21,12 @@ public class Connector implements Runnable {
 		while(!closed) {
 		    Thread commThread = new Thread(comms);
 		    commThread.start();
+		    // Wait for connection to be made
+		    while(!comms.init) App.sleepThread("Connector thread", App.CLIENT_TICKRATE);
 		    // Periodically check if comms are working
 		    while(!comms.closed) App.sleepThread("Connector thread", App.CLIENT_TICKRATE);
 		    if(App.DEBUG_MODE) System.out.println("Server connection lost. Retrying to connect...");
+		    comms.messagesLock.lock();
 		    comms = new Comms("localhost", 6668);
 		}	
 	}

@@ -36,7 +36,8 @@ public class Comms implements Runnable {
 	public List<UpdateGroup> stateUpdates;
 	public long serverStateID = 0;
 	
-	public boolean closed = false;
+	public boolean init = false;
+	public boolean closed = true;
 	
 	public Comms(String host, int port) {
 		this.host = host;
@@ -51,6 +52,8 @@ public class Comms implements Runnable {
 			socket = new Socket(host, port);
 			din = new DataInputStream(socket.getInputStream());
 			dout = new DataOutputStream(socket.getOutputStream());
+			closed = false;
+			init = true;
 			
 			Thread senderThread = new Thread(new Runnable() {
 				@Override
@@ -77,6 +80,7 @@ public class Comms implements Runnable {
 			
 		} catch(ConnectException e) {
 			closed = true;
+			init = true;
 		} catch(Exception e){
 			System.out.println("Error encountered while connecting to the server");
 			e.printStackTrace();

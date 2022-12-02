@@ -46,7 +46,7 @@ public class Synchroniser {
 					//send current state change
 					long groupID = sendStateUpdate();
 					//wait for confirmation
-					confirmStateReceived(groupID);
+					confirmStateReceived(groupID, App.CLIENT_TICKRATE*10);
 					
 					App.sleepThread("State sender", App.CLIENT_TICKRATE);
 				}
@@ -70,7 +70,7 @@ public class Synchroniser {
 						state.stateLock.lock();
 						compareStates(state.totalState, connector.comms.stateUpdates);
 						connector.comms.stateUpdates.clear();
-						boolean awaitingAck = false;
+						boolean needAck = false;
 						long id = 0;
 						//Mismatch detected - fetch full history
 						if(state.currentStateID < connector.comms.serverStateID ||
@@ -81,22 +81,12 @@ public class Synchroniser {
 											connector.comms.serverStateID + ", requesting full state");
 							id = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
 							connector.comms.addMessage("FETCH_HISTORY;ID:" + id + ";");
-							awaitingAck = true;
+							needAck = true;
 						}
 						state.stateLock.unlock();
 						connector.comms.messagesLock.unlock();
 						//Block the thread while we wait for confirmation
-						while(awaitingAck) {
-							connector.comms.messagesLock.lock();
-							int j = connector.comms.confirmations.indexOf(id);
-							if(j != -1) {
-								awaitingAck = false;
-								implementer.clear();
-								state.clear();
-								if(App.DEBUG_MODE) System.out.println("Full state request accepted by the server");
-							}
-							connector.comms.messagesLock.unlock();
-						}
+						if(needAck) confirmStateRequestReceived(id, App.CLIENT_TICKRATE*10);
 						firstTimeCheck = false;
 					}
 					else {
@@ -121,9 +111,36 @@ public class Synchroniser {
 		return groupID;
 	}
 	
-	public void confirmStateReceived(long id) {
+	private void confirmStateRequestReceived(long id, long timeout) {
 		boolean awaitingAck = true;
+		long start = System.currentTimeMillis();
 		while(awaitingAck) {
+			long passed = System.currentTimeMillis() - start;
+			if(passed > timeout) {
+				if(App.DEBUG_MODE) System.out.println("Acknowledgment of state not received from server");
+				break;
+			}
+			connector.comms.messagesLock.lock();
+			int j = connector.comms.confirmations.indexOf(id);
+			if(j != -1) {
+				awaitingAck = false;
+				implementer.clear();
+				state.clear();
+				if(App.DEBUG_MODE) System.out.println("Full state request accepted by the server");
+			}
+			connector.comms.messagesLock.unlock();
+		}
+	}
+	
+	private void confirmStateReceived(long id, long timeout) {
+		boolean awaitingAck = true;
+		long start = System.currentTimeMillis();
+		while(awaitingAck) {
+			long passed = System.currentTimeMillis() - start;
+			if(passed > timeout) {
+				if(App.DEBUG_MODE) System.out.println("Acknowledgment of state not received from server");
+				break;
+			}
 			connector.comms.messagesLock.lock();
 			int i = connector.comms.confirmations.indexOf(id);
 			if(i != -1) {
@@ -135,7 +152,7 @@ public class Synchroniser {
 		}
 	}
 	
-	public void compareStates(List<UpdateGroup> current, List<UpdateGroup> updates) {
+	private void compareStates(List<UpdateGroup> current, List<UpdateGroup> updates) {
 		Collections.sort(current);
 		Collections.sort(updates);
 		//check for missing update IDs and implement gaps
