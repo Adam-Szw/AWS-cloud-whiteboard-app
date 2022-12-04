@@ -46,7 +46,7 @@ public class Synchroniser {
 					//send current state change
 					long groupID = sendStateUpdate();
 					//wait for confirmation
-					confirmStateReceived(groupID, App.CLIENT_TICKRATE*10);
+					confirmStateReceived(groupID, App.CLIENT_TICKRATE*100);
 					
 					App.sleepThread("State sender", App.CLIENT_TICKRATE);
 				}
@@ -86,7 +86,7 @@ public class Synchroniser {
 						state.stateLock.unlock();
 						connector.comms.messagesLock.unlock();
 						//Block the thread while we wait for confirmation
-						if(needAck) confirmStateRequestReceived(id, App.CLIENT_TICKRATE*10);
+						if(needAck) confirmStateRequestReceived(id, App.CLIENT_TICKRATE*100);
 						firstTimeCheck = false;
 					}
 					else {

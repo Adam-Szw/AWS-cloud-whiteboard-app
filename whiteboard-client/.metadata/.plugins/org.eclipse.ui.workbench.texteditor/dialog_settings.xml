@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
-		<item key="selection" value="State"/>
+		<item key="selection" value=""/>
 		<item key="wrap" value="true"/>
 		<item key="casesensitive" value="false"/>
 		<item key="wholeword" value="false"/>
 		<item key="incremental" value="false"/>
 		<item key="isRegEx" value="false"/>
 		<list key="findhistory">
+			<item value="subup"/>
+			<item value="test"/>
+			<item value="test2"/>
 			<item value="state"/>
 			<item value="sleep"/>
 			<item value="fetch"/>
@@ -20,9 +23,6 @@
 			<item value="comparing"/>
 			<item value="received new state:"/>
 			<item value="println"/>
-			<item value="update"/>
-			<item value="ACK;ID:2772720499198729218;Line:254,98-&gt;249,101;Line:249,101-&gt;246,104;Line:246,104-&gt;243,106;Line:243,106-&gt;242,109;%UPDATE;ID:1625174029067024554;Line:400,42-&gt;399,42;Line:399,42-&gt;399,43;%UPDATE;ID:408744279893"/>
-			<item value="received new"/>
 		</list>
 		<list key="replacehistory">
 		</list>

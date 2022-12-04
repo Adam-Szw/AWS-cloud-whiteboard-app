@@ -1,6 +1,7 @@
 package whiteboard_server;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,13 +21,25 @@ public class Server {
 	public static final int COMMS_TICKRATE = 10;
 	public static final boolean DEBUG_MODE = true;
 	
+	public static final int serverPort = 6668;
+	
 	public int port;
 	public ServerSocket serverSocket;
 	public Lock stateLock = new ReentrantLock();
 	public State updateState;
 	public State stateTotal;
 	
-	List<ClientConnection> clientConnections = new ArrayList<ClientConnection>();
+	List<Connection> clientConnections = new ArrayList<Connection>();
+	List<Connection> serverConnections = new ArrayList<Connection>();
+	
+	// List of available servers to connect to on the network
+	// They should be source from AWS elastic IP service
+	@SuppressWarnings("serial")
+	public static final ArrayList<String> serverIPs = new ArrayList<String>() {
+		{
+			
+		}
+	};
 	
 	public Server(int port) throws IOException {
 		this.port = port;
@@ -45,21 +58,23 @@ public class Server {
 	}
 	
 	// Sends a state change to all clients connected
-	public void updateClientStates(State state) throws IOException {
+	public void updateClientStates(State state) {
 		stateLock.lock();
-		for(ClientConnection connection : clientConnections) {
+		for(Connection connection : clientConnections) {
 			connection.sendState(state);
 		}
 		state.clear();
 		stateLock.unlock();
 	}
 	
-	public void updateOtherServers() {
-		//todo
+	public void broadcastServers(String update) {
+		for(Connection connection : serverConnections) {
+			connection.sendMessage(update);
+		}
 	}
 
 	public static void main(String[] args) throws IOException, InterruptedException {
-		Server server = new Server(6668);
+		Server server = new Server(serverPort);
 		
 		// Create and start threads for various operations
 		ClientAccepter accepter = new ClientAccepter(server);
@@ -71,7 +86,10 @@ public class Server {
 		ClientUpdater updater = new ClientUpdater(server);
 		Thread updateThread = new Thread(updater);
 		updateThread.start();
-
+		ServerPeerAccepter peerAccepter = new ServerPeerAccepter(serverIPs, serverPort, server);
+		Thread peerThread = new Thread(peerAccepter);
+		peerThread.start();
+		
 	}
 
 }

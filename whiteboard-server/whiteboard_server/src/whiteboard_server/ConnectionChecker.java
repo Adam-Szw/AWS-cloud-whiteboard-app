@@ -18,7 +18,7 @@ public class ConnectionChecker implements Runnable {
 	
 	@Override
 	public void run() {
-		for(ClientConnection connection : server.clientConnections) {
+		for(Connection connection : server.clientConnections) {
 			if(connection.closed) {
 				if(Server.DEBUG_MODE) System.out.println("Removing client comms from the list");
 				server.clientConnections.remove(connection);

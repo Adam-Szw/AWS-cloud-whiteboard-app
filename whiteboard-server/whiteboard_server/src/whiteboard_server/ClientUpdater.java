@@ -1,6 +1,5 @@
 package whiteboard_server;
 
-import java.io.IOException;
 
 /**
  * Periodically sends servers' updates to clients
@@ -19,13 +18,8 @@ public class ClientUpdater implements Runnable {
 	@Override
 	public void run() {
 		while(true) {
-			try {
-				server.updateClientStates(server.updateState);
-				Server.sleepThread("Updater thread", Server.UPDATE_TICKRATE);
-			} catch (IOException e) {
-				System.out.println("Error encountered while updating clients");
-				e.printStackTrace();
-			}
+			server.updateClientStates(server.updateState);
+			Server.sleepThread("Updater thread", Server.UPDATE_TICKRATE);
 		}
 	}
 

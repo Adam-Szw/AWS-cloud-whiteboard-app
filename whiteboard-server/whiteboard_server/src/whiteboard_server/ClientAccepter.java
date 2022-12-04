@@ -23,14 +23,14 @@ public class ClientAccepter implements Runnable {
 			 * Await client to connect and if received - create new connection execution
 			 */
 			try {
-				Socket clientSocket = server.serverSocket.accept();
+				Socket connectionSocket = server.serverSocket.accept();
 				if(Server.DEBUG_MODE) System.out.println("New client connection established");
-				ClientConnection connection = new ClientConnection(server, clientSocket);
+				Connection connection = new Connection(server, connectionSocket);
 				Thread connThread = new Thread(connection);
 				connThread.start();
 				server.clientConnections.add(connection);
 			} catch(Exception e){
-				System.out.println("Client connection error");
+				System.out.println("Connection error");
 				e.printStackTrace();
 			}
 		}
