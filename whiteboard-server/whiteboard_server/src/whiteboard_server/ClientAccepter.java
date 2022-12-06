@@ -24,14 +24,33 @@ public class ClientAccepter implements Runnable {
 			 */
 			try {
 				Socket connectionSocket = server.serverSocket.accept();
-				if(Server.DEBUG_MODE) System.out.println("New client connection established");
-				Connection connection = new Connection(server, connectionSocket);
-				Thread connThread = new Thread(connection);
-				connThread.start();
-				server.clientConnections.add(connection);
+				String receivedIP = connectionSocket.getRemoteSocketAddress().toString();
+				receivedIP = receivedIP.substring(1, receivedIP.indexOf(":"));
+				server.connectionsLock.lock();
+				if(server.connectedServers.contains(receivedIP)) {
+					server.connectionsLock.unlock();
+					continue;
+				}
+				if(Server.serverIPs.contains(receivedIP)) {
+					if(Server.DEBUG_MODE) System.out.println("New server peer connection established with: " + receivedIP);
+					Connection connection = new Connection(server, connectionSocket, true, receivedIP);
+					Thread connThread = new Thread(connection);
+					connThread.start();
+					server.connectedServers.add(receivedIP);
+					server.serverConnections.add(connection);
+				} else {
+					if(Server.DEBUG_MODE) System.out.println("New client connection established with: " + receivedIP);
+					Connection connection = new Connection(server, connectionSocket, false, receivedIP);
+					Thread connThread = new Thread(connection);
+					connThread.start();
+					server.clientConnections.add(connection);
+				}
+				server.connectionsLock.unlock();
 			} catch(Exception e){
 				System.out.println("Connection error");
 				e.printStackTrace();
+			} finally {
+				Server.sleepThread("Connector thread", Server.UPDATE_TICKRATE);
 			}
 		}
 	}

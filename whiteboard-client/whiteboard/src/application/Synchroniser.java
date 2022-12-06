@@ -3,6 +3,7 @@ package application;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -58,6 +59,10 @@ public class Synchroniser {
 			@Override
 			public void run() {
 				while(!closed) {
+					if(connector.newComms) {
+						connector.newComms = false;
+						firstTimeCheck = true;
+					}
 					if(connector.comms.closed) {
 						firstTimeCheck = true;
 						App.sleepThread("State receiver", App.CLIENT_TICKRATE);
@@ -79,14 +84,15 @@ public class Synchroniser {
 							if(App.DEBUG_MODE) System.out.println(
 									"Mismatch detected: " + state.currentStateID + "/" +
 											connector.comms.serverStateID + ", requesting full state");
-							id = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
+							Random rd = new Random();
+							id = Math.abs(rd.nextLong());
 							connector.comms.addMessage("FETCH_HISTORY;ID:" + id + ";");
 							needAck = true;
 						}
 						state.stateLock.unlock();
 						connector.comms.messagesLock.unlock();
 						//Block the thread while we wait for confirmation
-						if(needAck) confirmStateRequestReceived(id, App.CLIENT_TICKRATE*100);
+						if(needAck) confirmStateRequestReceived(id, App.CLIENT_TICKRATE * 100);
 						firstTimeCheck = false;
 					}
 					else {

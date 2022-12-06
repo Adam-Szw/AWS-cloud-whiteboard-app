@@ -25,25 +25,35 @@ public class ServerPeerAccepter implements Runnable {
 
 	@Override
 	public void run() {
-		for(int i = 0; i < ips.size(); i++) {
-			String host = ips.get(i);
-			try {
-				socket = new Socket(host, port);
-				if(Server.DEBUG_MODE) System.out.println("New server peer connection established");
-				Connection connection = new Connection(server, socket);
-				Thread connThread = new Thread(connection);
-				connThread.start();
-				server.serverConnections.add(connection);
-			} catch(ConnectException e) {
-				// Failed to connect to the server. This is expected - move on to the next one
-				continue;
-			} catch(Exception e){
-				System.out.println("Error encountered while connecting to another server");
-				e.printStackTrace();
+		while(true) {
+			for(int i = 0; i < ips.size(); i++) {
+				String host = ips.get(i);
+				try {
+					//todo - timeout this!!
+					socket = new Socket(host, port);
+					server.connectionsLock.lock();
+					if(server.connectedServers.contains(host)) {
+						server.connectionsLock.unlock();
+						continue;
+					}
+					if(Server.DEBUG_MODE) System.out.println("New server peer connection established with: " + host);
+					Connection connection = new Connection(server, socket, true, host);
+					Thread connThread = new Thread(connection);
+					connThread.start();
+					server.serverConnections.add(connection);
+					server.connectedServers.add(host);
+					server.connectionsLock.unlock();
+				} catch(ConnectException e){
+					// This is expected. move on to the next connection
+					continue;
+				} catch(Exception e){
+					System.out.println("Error encountered while connecting to another server");
+					e.printStackTrace();
+				}
 			}
+			// New server connections will not be made often
+			Server.sleepThread("Peer accepter thread", Server.UPDATE_TICKRATE);
 		}
-		// New server connections will not be made often
-		Server.sleepThread("Peer accepter thread", Server.UPDATE_TICKRATE);
 	}
 
 }

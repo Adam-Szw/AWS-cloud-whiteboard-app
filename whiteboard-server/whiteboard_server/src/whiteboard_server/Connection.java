@@ -25,16 +25,24 @@ public class Connection implements Runnable {
 	private DataOutputStream dout;
 	private Socket socket;
 	
-	private Lock messageLock = new ReentrantLock();				// Lock for messages below
-	private List<String> messages = new ArrayList<String>();	// Messages to send on next tick
+	private Lock messageLock = new ReentrantLock();					// Lock for messages below
+	private List<String> messages = new ArrayList<String>();		// Messages to send on next tick
+	private List<String> serverUpdates = new ArrayList<String>();	// Container to gather new state from another server
+	private boolean serverUpdateGathered = false;
+	
+	private boolean serverConnection;
 	
 	public boolean closed = false;
 	
-	public Connection(Server server, Socket s) throws IOException {
+	public String ip;
+	
+	public Connection(Server server, Socket s, boolean serverConnection, String ip) throws IOException {
 		this.server = server;
 		this.socket = s;
+		this.ip = ip;
 		din = new DataInputStream(s.getInputStream());
 		dout = new DataOutputStream(s.getOutputStream());
+		this.serverConnection = serverConnection;
 	}
 	
 	/*
@@ -68,8 +76,12 @@ public class Connection implements Runnable {
 		});
 		receiver.start();
 		
-		Server.sleepThread("Client connection", Server.UPDATE_TICKRATE);
-		sendState(server.stateTotal);
+		Server.sleepThread("Connection thread", Server.UPDATE_TICKRATE);
+		if(!serverConnection) {
+			server.stateLock.lock();
+			sendState(server.stateTotal);
+			server.stateLock.unlock();
+		}
 	}
 	
 	// Sends a message about new state of the system
@@ -85,23 +97,33 @@ public class Connection implements Runnable {
 	// Same as above but prepared to be parsed by server
 	public void sendStateServ(State state) {
 		messageLock.lock();
-		String msg = "";
-		msg += "COUNT;" + state.stateID + ";";
+		server.stateLock.lock();
+		addMessage("COUNT:" + state.stateID + ";");
 		for(int i = 0; i < state.updates.size(); i++) {
-			msg += state.updates.get(i);
+			addMessage("SRVUP:" + state.updates.get(i));
 		}
-		addMessage(msg);		// Send state update ID
+		addMessage("SRVUPEND;");
+		server.stateLock.unlock();
 		messageLock.unlock();
 	}
 	
+	// Send message on the connection
 	public void sendMessage(String message) {
 		messageLock.lock();
 		addMessage(message);
 		messageLock.unlock();
 	}
 	
-	void addMessage(String message) {
-		// Implementation below is to avoid String being overflowed
+	// Request current full state from other servers to synchronise
+	public void requestState() {
+		if(Server.DEBUG_MODE) System.out.println("Requesting full state update from other servers");
+		messageLock.lock();
+		addMessage("SERV_FETCH;");
+		messageLock.unlock();
+	}
+	
+	// This function takes care of string overflow and separates messages into chunks
+	private void addMessage(String message) {
 		if(messages.size() == 0) messages.add("");
 		String currMsg = messages.get(messages.size() - 1);
 		if(currMsg.length() + message.length() > 10000) {
@@ -111,7 +133,7 @@ public class Connection implements Runnable {
 		}
 	}
 	
-	void writeMessage(){
+	private void writeMessage(){
 		try {
 			messageLock.lock();
 			while(messages.size() > 0) {
@@ -130,41 +152,11 @@ public class Connection implements Runnable {
 		}
 	}
 	
-	void receiveMessage() {
+	private void receiveMessage() {
 		try {
 			String str = din.readUTF();
 			server.stateLock.lock();
-			String update = "";
-			for(String msg : str.replace(";", ";@").split("@")) {
-				if(msg.length() >= 14 && msg.substring(0, 14).equals("FETCH_HISTORY;")) {
-					// The connection is requesting full state
-					if(Server.DEBUG_MODE) System.out.println("Client full state request received");
-					sendState(server.stateTotal);
-				} else if (msg.length() >= 6 && msg.substring(0, 6).equals("COUNT;")) {
-					// Another server sent total state update
-					if(Server.DEBUG_MODE) System.out.println("Full state received from another server");
-					//parse state and decide if update or not based on id
-					System.out.println(msg);
-					//todo
-					
-				} else if (msg.length() >= 11 && msg.substring(0, 11).equals("SERV_FETCH;")) {
-					// Another server requests total state
-					if(Server.DEBUG_MODE) System.out.println("Server full state request received");
-					sendStateServ(server.stateTotal);
-				} else {
-					// The connection is just updating the state
-					update += msg;
-				}
-			}
-			if(!update.equals("")) {
-				// Acknowledge state update from client
-				server.updateState.updateState(update);
-				server.stateTotal.updateState(update);
-				server.broadcastServers(update);
-				messageLock.lock();
-				addMessage("ACK;" + update);
-				messageLock.unlock();
-			}
+			decodeMessage(str);
 			server.stateLock.unlock();
 		} catch (SocketException e) {
 			// Connection to client lost
@@ -175,16 +167,100 @@ public class Connection implements Runnable {
 		}
 	}
 	
-	// Request current full state from other servers to synchronise
-	void requestState() {
-		messageLock.lock();
-		addMessage("SERV_FETCH");
-		messageLock.unlock();
+	private void decodeMessage(String message) {
+		for(String str : message.replace("\n", "@").split("@")) {
+			if(strBegins(str, "COUNT:")) {
+				// Another server sent total state update
+				// parse state and decide if update or not based on id
+				String msg = str.replaceAll("\\s","");
+				int idend = msg.indexOf(";", 6);
+				String sub = msg.substring(6, idend);
+				long idReceived = Long.parseLong(sub);
+				if(idReceived > server.stateTotal.stateID) {
+					// Be generous with timeout here - it might be a lot of data
+					updateServerTotalState(idReceived, Server.UPDATE_TICKRATE * 100);
+				}
+			} else if(strBegins(str, "SERV_FETCH;")) {
+				// Another server requests total state
+				if(Server.DEBUG_MODE) System.out.println("Server full state request received");
+				sendStateServ(server.stateTotal);
+			} else if(strBegins(str, "SRVUP:")) {
+				// Part of the server update package
+				serverUpdates.add(str.substring(6));
+			} else if(strBegins(str, "SRVUPEND;")) {
+				// End of server update package
+				serverUpdateGathered = true;
+			} else {
+				String update = "";
+				for(String msg : str.replace(";", ";@").split("@")) {
+					if(strBegins(msg, "FETCH_HISTORY;")) {
+						// The connection is requesting full state
+						if(Server.DEBUG_MODE) System.out.println("Client full state request received");
+						server.stateLock.lock();
+						sendState(server.stateTotal);
+						server.stateLock.unlock();
+					}
+					else {
+						// The connection is just updating the state
+						msg = msg.replaceAll("\\s","");
+						update += msg;
+					}
+				}
+				if(update.length() > 0) {
+					// Acknowledge state update from client
+					server.updateState.updateState(update);
+					server.stateTotal.updateState(update);
+					// Prevent loop between servers
+					if(!serverConnection) server.broadcastServers(update);
+					if(!serverConnection) sendMessage("ACK;" + update);
+				}
+			}
+		}
+	}
+	
+	private void updateServerTotalState(long id, long timeout) {
+		// Gather complete state package first then use it to update
+		Thread gatherer = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				long start = System.currentTimeMillis();
+				if(Server.DEBUG_MODE) System.out.println("Listening for sever state updates");
+				while(!serverUpdateGathered) {
+					long passed = System.currentTimeMillis() - start;
+					if(passed > timeout) {
+						if(Server.DEBUG_MODE) System.out.println("Failed to gather server state");
+						return;
+					}
+					Server.sleepThread("Gatherer thread", Server.UPDATE_TICKRATE);
+				}
+				if(Server.DEBUG_MODE) System.out.println("New server state acquired");
+				server.stateLock.lock();
+				server.stateTotal.clear();
+				for(String update : serverUpdates) {
+					server.stateTotal.updateState(update);
+					server.updateState.updateState(update);
+				}
+				serverUpdates.clear();
+				server.stateTotal.stateID = id;
+				server.updateState.stateID = id;
+				server.stateLock.unlock();
+			}
+		});
+		gatherer.start();
+	}
+	
+	private boolean strBegins(String str, String compare) {
+		int length = compare.length();
+		if(length > str.length()) return false;
+		String sub = str.substring(0, length);
+		if(sub.equals(compare)) return true;
+		return false;
 	}
 	
 	// Stops connected threads and close socket
-	void close() {
-		if(Server.DEBUG_MODE) System.out.println("Closing connection");
+	private void close() {
+		if(closed) return;
+		if(Server.DEBUG_MODE) System.out.println("Closing connection with: " + ip);
 		try {
 			din.close();
 			dout.close();

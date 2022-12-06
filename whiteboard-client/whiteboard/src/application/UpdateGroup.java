@@ -2,6 +2,7 @@ package application;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 import application.drawings.Line;
@@ -22,7 +23,8 @@ public class UpdateGroup implements Comparable<UpdateGroup> {
 	
 	public UpdateGroup() {
 		this.shapes = new ArrayList<Shape>();
-		this.id = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
+		Random rd = new Random();
+		this.id = Math.abs(rd.nextLong());
 	}
 	
 	public UpdateGroup(long id) {

@@ -17,8 +17,20 @@ public class ClientUpdater implements Runnable {
 
 	@Override
 	public void run() {
+		long start = System.currentTimeMillis();
+		long passed = 0;
+		boolean periodicCheck = false;
+		
 		while(true) {
-			server.updateClientStates(server.updateState);
+			if(server.updateState.updates.size() > 0 || periodicCheck) {
+				server.updateClientStates(server.updateState);
+				periodicCheck = false;
+			}
+			passed = System.currentTimeMillis() - start;
+			if(passed > Server.UPDATE_TICKRATE * 50) {
+				start = System.currentTimeMillis();
+				periodicCheck = true;
+			}
 			Server.sleepThread("Updater thread", Server.UPDATE_TICKRATE);
 		}
 	}

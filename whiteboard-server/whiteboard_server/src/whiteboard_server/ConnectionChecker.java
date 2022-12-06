@@ -18,14 +18,26 @@ public class ConnectionChecker implements Runnable {
 	
 	@Override
 	public void run() {
-		for(Connection connection : server.clientConnections) {
-			if(connection.closed) {
-				if(Server.DEBUG_MODE) System.out.println("Removing client comms from the list");
-				server.clientConnections.remove(connection);
-				break;
+		while(true) {
+			server.connectionsLock.lock();
+			for(Connection connection : server.clientConnections) {
+				if(connection.closed) {
+					if(Server.DEBUG_MODE) System.out.println("Removing client comms from the list");
+					server.clientConnections.remove(connection);
+					break;
+				}
 			}
+			for(Connection connection : server.serverConnections) {
+				if(connection.closed) {
+					if(Server.DEBUG_MODE) System.out.println("Removing server comms from the list");
+					server.serverConnections.remove(connection);
+					server.connectedServers.remove(connection.ip);
+					break;
+				}
+			}
+			server.connectionsLock.unlock();
+			Server.sleepThread("Connection checker thread", Server.UPDATE_TICKRATE);
 		}
-		Server.sleepThread("Connection checker thread", Server.UPDATE_TICKRATE);
 	}
 
 }

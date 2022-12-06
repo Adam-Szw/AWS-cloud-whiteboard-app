@@ -53,7 +53,6 @@ public class Comms implements Runnable {
 			din = new DataInputStream(socket.getInputStream());
 			dout = new DataOutputStream(socket.getOutputStream());
 			closed = false;
-			init = true;
 			
 			Thread senderThread = new Thread(new Runnable() {
 				@Override
@@ -77,6 +76,8 @@ public class Comms implements Runnable {
 				}
 			});
 			receiverThread.start();
+			
+			init = true;
 			
 		} catch(ConnectException e) {
 			closed = true;
@@ -132,28 +133,32 @@ public class Comms implements Runnable {
 	}
 	
 	void sortMessage(String msg) {
-		if(msg.length() >= 4 && msg.substring(0, 4).equals("ACK;")) {
-			int idloc = msg.indexOf("ID:") + 3;
-			int idend = msg.indexOf(";", idloc);
-			long id = Long.parseLong(msg.substring(idloc, idend));
-			confirmations.add(id);
-		}
-		
-		if(msg.length() >= 7 && msg.substring(0, 7).equals("UPDATE;")) {
-			int idloc = msg.indexOf("ID:") + 3;
-			int idend = msg.indexOf(";", idloc);
-			String id = msg.substring(idloc, idend);
-			UpdateGroup newUpdate = new UpdateGroup(Long.parseLong(id));
-			for(String str : msg.substring(idend).split(";")) {
-				newUpdate.append(str);
+		try {
+			if(msg.length() >= 4 && msg.substring(0, 4).equals("ACK;")) {
+				int idloc = msg.indexOf("ID:") + 3;
+				int idend = msg.indexOf(";", idloc);
+				long id = Long.parseLong(msg.substring(idloc, idend));
+				confirmations.add(id);
 			}
-			stateUpdates.add(newUpdate);
-		}
-		
-		if(msg.length() >= 6 && msg.substring(0, 6).equals("COUNT;")) {
-			int idend = msg.indexOf(";", 6);
-			String str = msg.substring(6, idend);
-			serverStateID = Math.max(serverStateID, Long.parseLong(str));
+			
+			if(msg.length() >= 7 && msg.substring(0, 7).equals("UPDATE;")) {
+				int idloc = msg.indexOf("ID:") + 3;
+				int idend = msg.indexOf(";", idloc);
+				String id = msg.substring(idloc, idend);
+				UpdateGroup newUpdate = new UpdateGroup(Long.parseLong(id));
+				for(String str : msg.substring(idend).split(";")) {
+					newUpdate.append(str);
+				}
+				stateUpdates.add(newUpdate);
+			}
+			
+			if(msg.length() >= 6 && msg.substring(0, 6).equals("COUNT;")) {
+				int idend = msg.indexOf(";", 6);
+				String str = msg.substring(6, idend);
+				serverStateID = Math.max(serverStateID, Long.parseLong(str));
+			}
+		} catch(NumberFormatException e) {
+			System.out.println("Unable to sort message: " + msg);
 		}
 	}
 	
