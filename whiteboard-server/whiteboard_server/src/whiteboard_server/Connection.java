@@ -4,7 +4,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
@@ -142,13 +141,9 @@ public class Connection implements Runnable {
 				messages.remove(0);
 			}
 			messageLock.unlock();
-		} catch (SocketException e) {
+		} catch (Exception e) {
 			// Connection to client lost
 			close();
-		}
-		catch (IOException e) {
-			System.out.println("Error encountered while writing to connection");
-			e.printStackTrace();
 		}
 	}
 	
@@ -158,12 +153,9 @@ public class Connection implements Runnable {
 			server.stateLock.lock();
 			decodeMessage(str);
 			server.stateLock.unlock();
-		} catch (SocketException e) {
+		} catch (Exception e) {
 			// Connection to client lost
 			close();
-		} catch (IOException e) {
-			System.out.println("Error encountered while receiving message from connection");
-			e.printStackTrace();
 		}
 	}
 	
@@ -180,6 +172,19 @@ public class Connection implements Runnable {
 					// Be generous with timeout here - it might be a lot of data
 					updateServerTotalState(idReceived, Server.UPDATE_TICKRATE * 100);
 				}
+			} else if(strBegins(str, "CLEAR;")) {
+				// Clear total state signal sent
+				if(Server.DEBUG_MODE) System.out.println("Server state clear signal received");
+				String id = str.substring(6);
+				server.stateLock.lock();
+				server.updateState.clearUpdate();
+				server.stateTotal.clearUpdate();
+				server.stateLock.unlock();
+				sendMessage("ACK;" + id);
+				// Update clients after this
+				ClientUpdater.periodicCheck = true;
+				// Forward to other servers
+				if(!serverConnection) server.broadcastServers(str);
 			} else if(strBegins(str, "SERV_FETCH;")) {
 				// Another server requests total state
 				if(Server.DEBUG_MODE) System.out.println("Server full state request received");
@@ -190,21 +195,20 @@ public class Connection implements Runnable {
 			} else if(strBegins(str, "SRVUPEND;")) {
 				// End of server update package
 				serverUpdateGathered = true;
+			} else if(strBegins(str, "FETCH_HISTORY;")) {
+				// The connection is requesting full state
+				if(Server.DEBUG_MODE) System.out.println("Client full state request received");
+				server.stateLock.lock();
+				sendState(server.stateTotal);
+				server.stateLock.unlock();
+				String id = str.substring(14);
+				sendMessage("ACK;" + id);
 			} else {
 				String update = "";
 				for(String msg : str.replace(";", ";@").split("@")) {
-					if(strBegins(msg, "FETCH_HISTORY;")) {
-						// The connection is requesting full state
-						if(Server.DEBUG_MODE) System.out.println("Client full state request received");
-						server.stateLock.lock();
-						sendState(server.stateTotal);
-						server.stateLock.unlock();
-					}
-					else {
-						// The connection is just updating the state
-						msg = msg.replaceAll("\\s","");
-						update += msg;
-					}
+					// The connection is just updating the state
+					msg = msg.replaceAll("\\s","");
+					update += msg;
 				}
 				if(update.length() > 0) {
 					// Acknowledge state update from client

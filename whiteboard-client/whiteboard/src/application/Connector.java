@@ -17,8 +17,11 @@ public class Connector implements Runnable {
 	private int waitTime = App.CLIENT_TICKRATE;
 	private int maxWaitTime = App.CLIENT_TICKRATE * 100;
 	
-	public Connector() {
-		comms = new Comms("localhost", 6668);
+	private String serverIP;
+	
+	public Connector(String serverIP) {
+		this.serverIP = serverIP;
+		comms = new Comms(serverIP, App.PORT);
 	}
 	
 	@Override
@@ -35,7 +38,7 @@ public class Connector implements Runnable {
 		    App.sleepThread("Connector thread", waitTime);
 		    waitTime = Math.min(waitTime * 2, maxWaitTime);
 		    comms.messagesLock.lock();
-		    comms = new Comms("localhost", 6668);
+		    comms = new Comms(serverIP, App.PORT);
 		}	
 	}
 	

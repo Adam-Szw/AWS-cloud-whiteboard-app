@@ -6,8 +6,9 @@
 		<item key="wholeword" value="false"/>
 		<item key="incremental" value="false"/>
 		<item key="isRegEx" value="false"/>
-		<item key="selection" value="timeout"/>
+		<item key="selection" value="strBeg"/>
 		<list key="findhistory">
+			<item value="strbeg"/>
 			<item value="timeout"/>
 			<item value="lock"/>
 			<item value="receiving"/>
@@ -22,7 +23,6 @@
 			<item value="SRVUPEND"/>
 			<item value="broadcast"/>
 			<item value="sent"/>
-			<item value="received msg"/>
 		</list>
 		<list key="replacehistory">
 		</list>

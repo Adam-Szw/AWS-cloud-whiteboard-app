@@ -1,10 +1,5 @@
 package application;
 
-import java.awt.BorderLayout;
-import java.awt.Container;
-
-import javax.swing.JFrame;
-
 /**
  * Main class
  * 
@@ -17,6 +12,9 @@ public class App {
 	
 	public static int CLIENT_TICKRATE = 100;
 	public static int COMMS_TICKRATE = 10;
+	
+	public static String AUTOBALANCER_IP = "localhost";
+	public static int PORT = 6668;
 
 	public static void sleepThread(String err, int tickrate) {
 		try {
@@ -28,19 +26,10 @@ public class App {
 	}
 	
 	public static void main(String[] args) {
-		Connector connector = new Connector();
-		
-	    JFrame frame = new JFrame("Whiteboard App");
-	    Container content = frame.getContentPane();
-	    content.setLayout(new BorderLayout());
+		Connector connector = new Connector(AUTOBALANCER_IP);
+		Whiteboard whiteboard = new Whiteboard(connector);
+		whiteboard.open(800, 600);
 
-	    DrawingPanel panel = new DrawingPanel(connector);
-	    content.add(panel, BorderLayout.CENTER);
-	    
-	    frame.setSize(800, 600);
-	    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	    frame.setVisible(true);
-	    
 	    // Its important that this is called AFTER creating panel
 		Thread connectorThread = new Thread(connector);
 		connectorThread.start();

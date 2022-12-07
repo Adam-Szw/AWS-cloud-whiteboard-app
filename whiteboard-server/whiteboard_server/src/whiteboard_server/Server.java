@@ -3,7 +3,6 @@ package whiteboard_server;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.MalformedURLException;
 import java.net.ServerSocket;
 import java.net.URL;
 import java.util.ArrayList;
@@ -24,7 +23,7 @@ public class Server {
 	public static final int COMMS_TICKRATE = 10;
 	public static final boolean DEBUG_MODE = true;
 	
-	public static final int serverPort = 6668;
+	public static final int SERVER_PORT = 6668;
 	
 	public int port;
 	public ServerSocket serverSocket;
@@ -42,7 +41,7 @@ public class Server {
 	@SuppressWarnings("serial")
 	public static final ArrayList<String> serverIPs = new ArrayList<String>() {
 		{
-			add("Elastic IP goes here");	
+			
 		}
 	};
 	
@@ -111,7 +110,7 @@ public class Server {
 
 	public static void main(String[] args){
 		removeMyIpFromList();
-		Server server = new Server(serverPort);
+		Server server = new Server(SERVER_PORT);
 		
 		// Communication threads
 		ConnectionChecker checker = new ConnectionChecker(server);
@@ -126,7 +125,7 @@ public class Server {
 		ClientAccepter accepter = new ClientAccepter(server);
 		Thread accepterThread = new Thread(accepter);
 		accepterThread.start();
-		ServerPeerAccepter peerAccepter = new ServerPeerAccepter(serverIPs, serverPort, server);
+		ServerPeerAccepter peerAccepter = new ServerPeerAccepter(serverIPs, SERVER_PORT, server);
 		Thread peerThread = new Thread(peerAccepter);
 		peerThread.start();
 		

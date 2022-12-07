@@ -11,6 +11,8 @@ public class ClientUpdater implements Runnable {
 	
 	private Server server;
 	
+	public static boolean periodicCheck = false;
+	
 	public ClientUpdater(Server server) {
 		this.server = server;
 	}
@@ -19,7 +21,6 @@ public class ClientUpdater implements Runnable {
 	public void run() {
 		long start = System.currentTimeMillis();
 		long passed = 0;
-		boolean periodicCheck = false;
 		
 		while(true) {
 			if(server.updateState.updates.size() > 0 || periodicCheck) {

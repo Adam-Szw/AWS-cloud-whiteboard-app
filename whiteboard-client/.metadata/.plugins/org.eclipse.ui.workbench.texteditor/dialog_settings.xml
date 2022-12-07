@@ -9,6 +9,7 @@
 		<item key="isRegEx" value="false"/>
 		<list key="findhistory">
 			<item value="System.out"/>
+			<item value="decode"/>
 			<item value="timeout"/>
 			<item value="todo"/>
 			<item value="FETCH"/>
@@ -22,7 +23,6 @@
 			<item value="receiveMessage"/>
 			<item value="sortMessage"/>
 			<item value="missing"/>
-			<item value="received update"/>
 		</list>
 		<list key="replacehistory">
 		</list>

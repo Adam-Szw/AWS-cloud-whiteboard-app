@@ -5,7 +5,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.Socket;
-import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
@@ -105,12 +104,9 @@ public class Comms implements Runnable {
 			dout.flush();
 			messageToSend = "";
 			messageSendLock.unlock();
-		} catch (SocketException e) {
+		} catch (Exception e) {
 			if(App.DEBUG_MODE) System.out.println(CONN_LOST);
 			close();
-		} catch (IOException e) {
-			System.out.println("Error encountered while sending message");
-			e.printStackTrace();
 		}
 	}
 	
@@ -123,25 +119,22 @@ public class Comms implements Runnable {
 				sortMessage(msg);
 			}
 			messagesLock.unlock();
-		} catch (SocketException e) {
+		} catch (Exception e) {
 			if(App.DEBUG_MODE) System.out.println(CONN_LOST);
 			close();
-		} catch (IOException e) {
-			System.out.println("Error encountered while receiving message");
-			e.printStackTrace();
 		}
 	}
 	
 	void sortMessage(String msg) {
 		try {
-			if(msg.length() >= 4 && msg.substring(0, 4).equals("ACK;")) {
+			if(GraphicsImplementer.strBegins(msg, "ACK;")) {
 				int idloc = msg.indexOf("ID:") + 3;
 				int idend = msg.indexOf(";", idloc);
 				long id = Long.parseLong(msg.substring(idloc, idend));
 				confirmations.add(id);
 			}
 			
-			if(msg.length() >= 7 && msg.substring(0, 7).equals("UPDATE;")) {
+			if(GraphicsImplementer.strBegins(msg, "UPDATE;")) {
 				int idloc = msg.indexOf("ID:") + 3;
 				int idend = msg.indexOf(";", idloc);
 				String id = msg.substring(idloc, idend);
@@ -152,10 +145,10 @@ public class Comms implements Runnable {
 				stateUpdates.add(newUpdate);
 			}
 			
-			if(msg.length() >= 6 && msg.substring(0, 6).equals("COUNT;")) {
+			if(GraphicsImplementer.strBegins(msg, "COUNT;")) {
 				int idend = msg.indexOf(";", 6);
 				String str = msg.substring(6, idend);
-				serverStateID = Math.max(serverStateID, Long.parseLong(str));
+				serverStateID = Long.parseLong(str);
 			}
 		} catch(NumberFormatException e) {
 			System.out.println("Unable to sort message: " + msg);

@@ -16,6 +16,8 @@
 		<item key="create_package_info_java" value="false"/>
 	</section>
 	<section name="completion_proposal_size">
+		<item key="size.x" value="428"/>
+		<item key="size.y" value="256"/>
 	</section>
 	<section name="quick_assist_proposal_size">
 	</section>

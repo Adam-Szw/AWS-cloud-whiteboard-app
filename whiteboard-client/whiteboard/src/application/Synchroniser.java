@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * This class is responsible for managing the state of the application
@@ -22,6 +21,8 @@ public class Synchroniser {
 	private boolean firstTimeCheck = true;
 	
 	public boolean closed = false;
+	
+	private boolean requestingState = false;
 	
 	public Synchroniser(State state, Connector connector, GraphicsImplementer implementer) {
 		this.state = state;
@@ -47,7 +48,7 @@ public class Synchroniser {
 					//send current state change
 					long groupID = sendStateUpdate();
 					//wait for confirmation
-					confirmStateReceived(groupID, App.CLIENT_TICKRATE*100);
+					confirmMessageReceived(groupID, App.CLIENT_TICKRATE*100);
 					
 					App.sleepThread("State sender", App.CLIENT_TICKRATE);
 				}
@@ -71,28 +72,31 @@ public class Synchroniser {
 					//receive state from server
 					connector.comms.messagesLock.lock();
 					int i = connector.comms.stateUpdates.size();
-					if(i > 0 || state.currentStateID < connector.comms.serverStateID || firstTimeCheck) {
+					boolean checkMyState = i > 0 || state.currentStateID != connector.comms.serverStateID || firstTimeCheck;
+					if(checkMyState) {
 						state.stateLock.lock();
 						compareStates(state.totalState, connector.comms.stateUpdates);
 						connector.comms.stateUpdates.clear();
-						boolean needAck = false;
 						long id = 0;
+						boolean stateBehindServer = state.currentStateID < connector.comms.serverStateID;
+						boolean stateAheadOfServer = state.currentStateID > connector.comms.serverStateID + 1;
+						boolean mismatch = stateBehindServer || stateAheadOfServer || firstTimeCheck;
 						//Mismatch detected - fetch full history
-						if(state.currentStateID < connector.comms.serverStateID ||
-								state.currentStateID > connector.comms.serverStateID + 1
-								|| firstTimeCheck) {
-							if(App.DEBUG_MODE) System.out.println(
+						if(mismatch) {
+							if(App.DEBUG_MODE && !firstTimeCheck) System.out.println(
 									"Mismatch detected: " + state.currentStateID + "/" +
 											connector.comms.serverStateID + ", requesting full state");
 							Random rd = new Random();
 							id = Math.abs(rd.nextLong());
 							connector.comms.addMessage("FETCH_HISTORY;ID:" + id + ";");
-							needAck = true;
+							requestingState = true;
 						}
 						state.stateLock.unlock();
 						connector.comms.messagesLock.unlock();
 						//Block the thread while we wait for confirmation
-						if(needAck) confirmStateRequestReceived(id, App.CLIENT_TICKRATE * 100);
+						if(requestingState) {
+							confirmStateRequestReceived(id, App.CLIENT_TICKRATE * 100);
+						}
 						firstTimeCheck = false;
 					}
 					else {
@@ -117,19 +121,40 @@ public class Synchroniser {
 		return groupID;
 	}
 	
+	public void sendClearUpdate() {
+		if(App.DEBUG_MODE) System.out.println("Sending out state clear signal");
+		state.updateLock.lock();
+		state.stateLock.lock();
+		state.totalState.clear();
+		state.currentStateID = 0;
+		state.currentUpdate = new UpdateGroup();
+		state.stateLock.unlock();
+		state.updateLock.unlock();
+		Random rd = new Random();
+		long id = Math.abs(rd.nextLong());
+		connector.comms.messagesLock.lock();
+		connector.comms.addMessage("CLEAR;ID:" + id + ";" + "\n");
+		connector.comms.serverStateID = 0;
+		connector.comms.messagesLock.unlock();
+		// Block everything until clear signal is received
+		confirmMessageReceived(id, App.CLIENT_TICKRATE*10);
+		if(App.DEBUG_MODE) System.out.println("Clear signal received by the server");
+		// Trigger server match
+		connector.comms.serverStateID = -1;
+	}
+	
 	private void confirmStateRequestReceived(long id, long timeout) {
-		boolean awaitingAck = true;
 		long start = System.currentTimeMillis();
-		while(awaitingAck) {
+		while(requestingState) {
 			long passed = System.currentTimeMillis() - start;
 			if(passed > timeout) {
-				if(App.DEBUG_MODE) System.out.println("Acknowledgment of state not received from server");
+				if(App.DEBUG_MODE) System.out.println("Acknowledgment of state request not received from server");
 				break;
 			}
 			connector.comms.messagesLock.lock();
 			int j = connector.comms.confirmations.indexOf(id);
 			if(j != -1) {
-				awaitingAck = false;
+				requestingState = false;
 				implementer.clear();
 				state.clear();
 				if(App.DEBUG_MODE) System.out.println("Full state request accepted by the server");
@@ -138,13 +163,13 @@ public class Synchroniser {
 		}
 	}
 	
-	private void confirmStateReceived(long id, long timeout) {
+	private void confirmMessageReceived(long id, long timeout) {
 		boolean awaitingAck = true;
 		long start = System.currentTimeMillis();
 		while(awaitingAck) {
 			long passed = System.currentTimeMillis() - start;
 			if(passed > timeout) {
-				if(App.DEBUG_MODE) System.out.println("Acknowledgment of state not received from server");
+				if(App.DEBUG_MODE) System.out.println("Acknowledgment of message not received from server");
 				break;
 			}
 			connector.comms.messagesLock.lock();

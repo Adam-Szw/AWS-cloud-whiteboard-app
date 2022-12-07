@@ -29,4 +29,9 @@ public class State {
 		updates.clear();
 	}
 	
+	public void clearUpdate() {
+		updates.clear();
+		stateID = 0;
+	}
+	
 }

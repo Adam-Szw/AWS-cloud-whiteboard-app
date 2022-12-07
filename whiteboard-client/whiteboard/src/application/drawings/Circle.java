@@ -5,19 +5,27 @@ package application.drawings;
  * @author aks60
  *
  */
-public class Line extends Shape {
+public class Circle extends Shape {
 	
 	public int[] start;
 	public int[] end;
 	
-	public static String strStart = "L:";
+	public static String strStart = "C:";
 	
-	public Line(int[] start, int[] end) {
-		this.start = start;
-		this.end = end;
+	public Circle(int[] start, int[] end) {
+		 int[] cStart = new int[] {
+				 Math.min(start[0], end[0]),
+				 Math.min(start[1], end[1])
+		 };
+		 int[] cEnd = new int[] {
+				 Math.max(start[0], end[0]),
+				 Math.max(start[1], end[1])
+		 };
+		this.start = cStart;
+		this.end = cEnd;
 	}
 	
-	public Line(String str) {
+	public Circle(String str) {
 		str = str.substring(strStart.length());
 		String[] coords = str.split("->");
 		String[] start = coords[0].split(",");

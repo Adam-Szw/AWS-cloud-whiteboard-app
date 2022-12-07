@@ -3,8 +3,8 @@ package application;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
 
+import application.drawings.Circle;
 import application.drawings.Line;
 import application.drawings.Shape;
 
@@ -40,6 +40,7 @@ public class UpdateGroup implements Comparable<UpdateGroup> {
 	public void append(String str) {
 		GraphicsImplementer.ShapeType shape = GraphicsImplementer.decode(str);
 		if(shape == GraphicsImplementer.ShapeType.line) shapes.add(new Line(str));
+		if(shape == GraphicsImplementer.ShapeType.circle) shapes.add(new Circle(str));
 	}
 	
 	public String toString() {

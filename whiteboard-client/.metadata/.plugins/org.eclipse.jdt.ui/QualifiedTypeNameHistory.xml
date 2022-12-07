@@ -23,4 +23,12 @@
     <fullyQualifiedTypeName name="java.util.ArrayList"/>
     <fullyQualifiedTypeName name="java.net.ConnectException"/>
     <fullyQualifiedTypeName name="java.util.Random"/>
+    <fullyQualifiedTypeName name="java.awt.Button"/>
+    <fullyQualifiedTypeName name="javax.swing.JButton"/>
+    <fullyQualifiedTypeName name="javax.swing.JPanel"/>
+    <fullyQualifiedTypeName name="java.awt.GridLayout"/>
+    <fullyQualifiedTypeName name="java.awt.event.ActionListener"/>
+    <fullyQualifiedTypeName name="java.awt.event.ComponentAdapter"/>
+    <fullyQualifiedTypeName name="java.awt.event.ComponentEvent"/>
+    <fullyQualifiedTypeName name="java.awt.image.BufferedImage"/>
 </qualifiedTypeNameHistroy>
