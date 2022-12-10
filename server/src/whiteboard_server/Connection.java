@@ -253,7 +253,7 @@ public class Connection implements Runnable {
 		gatherer.start();
 	}
 	
-	private boolean strBegins(String str, String compare) {
+	public static boolean strBegins(String str, String compare) {
 		int length = compare.length();
 		if(length > str.length()) return false;
 		String sub = str.substring(0, length);

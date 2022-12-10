@@ -16,7 +16,6 @@ public class ClientAccepter implements Runnable {
 	public ClientAccepter(Server server, ServerPeerAccepter peerAccepter) {
 		this.server = server;
 		this.peerAccepter = peerAccepter;
-		System.out.println("test3");
 	}
 	
 	@Override

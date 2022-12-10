@@ -8,10 +8,6 @@ import java.net.Socket;
 import java.net.URL;
 import java.util.ArrayList;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 /**
  * Creates connections to other servers.
  * 
@@ -30,7 +26,6 @@ public class ServerPeerAccepter implements Runnable {
 		this.server = server;
 		addExistingServerIPs();
 		removeMyIpFromList();
-		System.out.println("test");
 	}
 	
 	private void addExistingServerIPs() {
@@ -45,22 +40,15 @@ public class ServerPeerAccepter implements Runnable {
 			 while ((line = reader.readLine()) != null) {
 				 jsonTotal += line + "\n";
 			 }
-			 JSONObject json = new JSONObject(jsonTotal);
-			 int reservationCount = json.getJSONArray("Reservations").length();
-			 for(int i = 0; i < reservationCount; i++) {
-				 JSONArray instances = json.getJSONArray("Reservations").getJSONObject(i).getJSONArray("Instances");
-				 for (int j = 0; j < instances.length(); j++) {
-			          JSONObject instance = instances.getJSONObject(j);
-			          String publicIp = instance.getString("PublicIpAddress");
-			          if(Server.DEBUG_MODE) System.out.println("Adding IP address to the list: " + publicIp);
-			          serverIPs.add(publicIp);
+			 for(String str : jsonTotal.split("\n")) {
+				 if(str.contains("PublicIpAddress")) {
+					 str = str.replaceAll("\\s","");
+					 String ip = str.substring(19, str.length()-2);
+					 serverIPs.add(ip);
 				 }
 			 }
 		} catch (IOException e) {
 			System.out.println("Failed to launch aws ec2 describe-instances command");
-			e.printStackTrace();
-		} catch (JSONException e) {
-			System.out.println("Failed to parse received JSON from ec2 instances command");
 			e.printStackTrace();
 		}
 	}
