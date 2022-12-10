@@ -19,7 +19,7 @@ public class Server {
 	public static final int UPDATE_TICKRATE = 100;
 	public static final int COMMS_TICKRATE = 10;
 	public static final boolean DEBUG_MODE = true;
-	public static final boolean PRINT_MSG = true;
+	public static final boolean PRINT_MSG = false;
 	
 	public static final int SERVER_PORT = 6668;
 	

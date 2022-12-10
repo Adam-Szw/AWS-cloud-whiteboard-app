@@ -146,7 +146,6 @@ public class Connection implements Runnable {
 			messageLock.unlock();
 		} catch (Exception e) {
 			// Connection to client lost
-			e.printStackTrace();
 			close();
 		}
 	}
@@ -161,7 +160,6 @@ public class Connection implements Runnable {
 			server.stateLock.unlock();
 		} catch (Exception e) {
 			// Connection to client lost
-			e.printStackTrace();
 			close();
 		}
 	}
