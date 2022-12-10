@@ -24,8 +24,6 @@ public class ServerPeerAccepter implements Runnable {
 	public ServerPeerAccepter(int port, Server server) {
 		this.port = port;
 		this.server = server;
-		addExistingServerIPs();
-		removeMyIpFromList();
 	}
 	
 	private void addExistingServerIPs() {
@@ -45,6 +43,7 @@ public class ServerPeerAccepter implements Runnable {
 					 str = str.replaceAll("\\s","");
 					 String ip = str.substring(19, str.length()-2);
 					 serverIPs.add(ip);
+					 if(Server.DEBUG_MODE) System.out.println("Adding IP to the list: " + ip);
 				 }
 			 }
 		} catch (IOException e) {
@@ -70,6 +69,8 @@ public class ServerPeerAccepter implements Runnable {
 
 	@Override
 	public void run() {
+		addExistingServerIPs();
+		removeMyIpFromList();
 		while(true) {
 			for(int i = 0; i < serverIPs.size(); i++) {
 				String host = serverIPs.get(i);
