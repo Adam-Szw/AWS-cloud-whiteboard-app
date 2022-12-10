@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<session version="1.0">
-<refactoring comment="Rename local variable &apos;state&apos; in &apos;application.Synchroniser.compareStates(...)&apos; to &apos;current&apos;&#x0D;&#x0A;- Original project: &apos;whiteboard&apos;&#x0D;&#x0A;- Original element: &apos;application.Synchroniser.compareStates(List&lt;UpdateGroup&gt;, List&lt;UpdateGroup&gt;).state&apos;&#x0D;&#x0A;- Renamed element: &apos;state&apos;&#x0D;&#x0A;- Update references to refactored element" description="Rename local variable &apos;state&apos;" id="org.eclipse.jdt.ui.rename.local.variable" input="/src&lt;application{Synchroniser.java[Synchroniser~compareStates~QList\&lt;QUpdateGroup;&gt;;~QList\&lt;QUpdateGroup;&gt;;@state!3975!3997!3993!3997!QList\&lt;QUpdateGroup;&gt;;!0!true" name="current" references="true" stamp="1669942903271" version="1.0"/>
-</session>

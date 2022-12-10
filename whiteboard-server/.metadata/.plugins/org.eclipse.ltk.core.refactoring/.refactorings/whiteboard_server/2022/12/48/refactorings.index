@@ -1,6 +1,0 @@
-1669924938172	Rename field 'connections'
-1670025607702	Rename type 'ClientAccepter'
-1670025794075	Rename type 'ClientConnection'
-1670026076340	Rename type 'ConnectionAccepter'
-1670115137702	Delete element
-1670140270844	Rename method 'gatherNewStatePackage'
