@@ -71,6 +71,7 @@ public class Connection implements Runnable {
 			public void run() {
 				while(!closed) {
 					receiveMessage();
+					Server.sleepThread("Connection thread", Server.COMMS_TICKRATE);
 				}
 			}
 		});
@@ -152,6 +153,7 @@ public class Connection implements Runnable {
 	
 	private void receiveMessage() {
 		try {
+			if(din.available() <= 0) return;
 			String str = din.readUTF();
 			if(Server.PRINT_MSG) System.out.println("IN: " + str);
 			server.stateLock.lock();
