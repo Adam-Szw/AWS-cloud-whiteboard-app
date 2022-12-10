@@ -34,6 +34,7 @@ public class ServerPeerAccepter implements Runnable {
 	
 	private void addExistingServerIPs() {
 		try {
+			if(Server.DEBUG_MODE) System.out.println("Creating list of existing server IPs");
 			ProcessBuilder processBuilder = new ProcessBuilder("aws", "ec2", "describe-instances");
 			Process process = processBuilder.start();
 			 InputStreamReader isr = new InputStreamReader(process.getInputStream());
@@ -50,6 +51,7 @@ public class ServerPeerAccepter implements Runnable {
 				 for (int j = 0; j < instances.length(); j++) {
 			          JSONObject instance = instances.getJSONObject(j);
 			          String publicIp = instance.getString("PublicIpAddress");
+			          if(Server.DEBUG_MODE) System.out.println("Adding IP address to the list: " + publicIp);
 			          serverIPs.add(publicIp);
 				 }
 			 }
@@ -70,6 +72,7 @@ public class ServerPeerAccepter implements Runnable {
 			BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
 			String IP = br.readLine();
 			serverIPs.remove(IP);
+			if(Server.DEBUG_MODE) System.out.println("Removing my own IP from the list: " + IP);
 		} catch (Exception e) {
 			System.out.println("Couldnt connect to amazon website to check IP");
 			e.printStackTrace();
