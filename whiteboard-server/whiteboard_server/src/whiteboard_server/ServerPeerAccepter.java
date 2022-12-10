@@ -30,6 +30,7 @@ public class ServerPeerAccepter implements Runnable {
 		this.server = server;
 		addExistingServerIPs();
 		removeMyIpFromList();
+		System.out.println("test");
 	}
 	
 	private void addExistingServerIPs() {

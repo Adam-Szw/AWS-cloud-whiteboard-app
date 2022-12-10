@@ -94,6 +94,7 @@ public class Server {
 		updateThread.start();
 		
 		// Connection threads
+		System.out.println("test2");
 		sleepThread("Main thread", UPDATE_TICKRATE * 10);
 		ServerPeerAccepter peerAccepter = new ServerPeerAccepter(SERVER_PORT, server);
 		Thread peerThread = new Thread(peerAccepter);
