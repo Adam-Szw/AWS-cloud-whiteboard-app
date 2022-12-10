@@ -95,11 +95,15 @@ public class Server {
 		Thread updateThread = new Thread(updater);
 		updateThread.start();
 		
-		// Connection threads
+		// Open server connection thread
 		sleepThread("Main thread", UPDATE_TICKRATE * 10);
 		ServerPeerAccepter peerAccepter = new ServerPeerAccepter(SERVER_PORT, server);
 		Thread peerThread = new Thread(peerAccepter);
 		peerThread.start();
+		// Wait for it to finish
+		while(!peerAccepter.initialized) sleepThread("Main thread", UPDATE_TICKRATE);
+		
+		// Open client connection thread
 		ClientAccepter accepter = new ClientAccepter(server, peerAccepter);
 		Thread accepterThread = new Thread(accepter);
 		accepterThread.start();

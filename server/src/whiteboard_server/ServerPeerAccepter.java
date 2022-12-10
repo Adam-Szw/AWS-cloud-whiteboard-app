@@ -21,9 +21,14 @@ public class ServerPeerAccepter implements Runnable {
 	private Socket socket;
 	private Server server;
 	
+	private String myIP;
+	
+	public boolean initialized = false;
+	
 	public ServerPeerAccepter(int port, Server server) {
 		this.port = port;
 		this.server = server;
+		myIP = getMyIpAddress();
 	}
 	
 	private void addExistingServerIPs() {
@@ -41,7 +46,7 @@ public class ServerPeerAccepter implements Runnable {
 				if(str.contains("PublicIpAddress")) {
 					str = str.replaceAll("\\s","");
 					String ip = str.substring(19, str.length()-2);
-					if(!serverIPs.contains(ip)) {
+					if(!serverIPs.contains(ip) && !ip.equals(myIP)) {
 						serverIPs.add(ip);
 						if(Server.DEBUG_MODE) System.out.println("Detected server under IP: " + ip);
 					}
@@ -53,21 +58,19 @@ public class ServerPeerAccepter implements Runnable {
 		}
 	}
 	
-	private void removeMyIpFromList() {
+	private String getMyIpAddress() {
 		String urlString = "http://checkip.amazonaws.com/";
 		URL url;
+		String IP = "";
 		try {
 			url = new URL(urlString);
 			BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
-			String IP = br.readLine();
-			if(serverIPs.contains(IP)) {
-				serverIPs.remove(IP);
-				if(Server.DEBUG_MODE) System.out.println("Removing my own IP from the list: " + IP);
-			}
+			IP = br.readLine();
 		} catch (Exception e) {
 			System.out.println("Couldnt connect to amazon website to check IP");
 			e.printStackTrace();
 		}
+		return IP;
 	}
 
 	@Override
@@ -75,7 +78,7 @@ public class ServerPeerAccepter implements Runnable {
 		while(true) {
 			server.IPlock.lock();
 			addExistingServerIPs();
-			removeMyIpFromList();
+			initialized = true;
 			@SuppressWarnings("unchecked")
 			ArrayList<String> serverIPsCopy = (ArrayList<String>) serverIPs.clone();
 			server.IPlock.unlock();
