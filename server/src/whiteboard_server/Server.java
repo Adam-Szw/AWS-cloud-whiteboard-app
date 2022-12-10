@@ -97,21 +97,24 @@ public class Server {
 		Thread updateThread = new Thread(updater);
 		updateThread.start();
 		
-		// Open server connection thread
+		// Create server connection thread and load server IPs
 		sleepThread("Main thread", UPDATE_TICKRATE * 10);
 		ServerPeerAccepter peerAccepter = new ServerPeerAccepter(SERVER_PORT, server);
 		Thread peerThread = new Thread(peerAccepter);
-		peerThread.start();
 		// Wait for it to finish
 		while(!peerAccepter.initialized) sleepThread("Main thread", UPDATE_TICKRATE);
 		
-		// Open client connection thread
+		// Open connection accepter thread
 		ClientAccepter accepter = new ClientAccepter(server, peerAccepter);
 		Thread accepterThread = new Thread(accepter);
 		accepterThread.start();
 		
-		// Get up to date with other servers
 		// Give some time for other servers to be picked up by peer accepter
+		sleepThread("Main thread", UPDATE_TICKRATE * 10);
+		// Open server connection thread
+		peerThread.start();
+		
+		// Get up to date with other servers
 		while(!peerAccepter.serverInitCheck) sleepThread("Main thread", UPDATE_TICKRATE);
 		server.requestStates();
 	}

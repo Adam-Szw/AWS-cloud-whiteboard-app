@@ -31,6 +31,8 @@ public class ServerPeerAccepter implements Runnable {
 		this.port = port;
 		this.server = server;
 		myIP = getMyIpAddress();
+		addExistingServerIPs();
+		initialized = true;
 	}
 	
 	private void addExistingServerIPs() {
@@ -83,7 +85,6 @@ public class ServerPeerAccepter implements Runnable {
 			@SuppressWarnings("unchecked")
 			ArrayList<String> serverIPsCopy = (ArrayList<String>) serverIPs.clone();
 			server.IPlock.unlock();
-			initialized = true;
 			for(int i = 0; i < serverIPsCopy.size(); i++) {
 				String host = serverIPsCopy.get(i);
 				try {
