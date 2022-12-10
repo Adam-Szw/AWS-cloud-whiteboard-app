@@ -38,6 +38,7 @@ public class ServerPeerAccepter implements Runnable {
 			 while ((line = reader.readLine()) != null) {
 				 jsonTotal += line + "\n";
 			 }
+			 System.out.println(jsonTotal);
 			 for(String str : jsonTotal.split("\n")) {
 				 if(str.contains("PublicIpAddress")) {
 					 str = str.replaceAll("\\s","");
