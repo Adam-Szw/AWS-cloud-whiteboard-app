@@ -39,7 +39,7 @@ public class ClientAccepter implements Runnable {
 					continue;
 				}
 				if(serverIPsCopy.contains(receivedIP)) {
-					if(Server.DEBUG_MODE) System.out.println("New server peer connection established with: " + receivedIP);
+					if(Server.DEBUG_MODE) System.out.println("New server peer connection accetped from: " + receivedIP);
 					Connection connection = new Connection(server, connectionSocket, true, receivedIP);
 					Thread connThread = new Thread(connection);
 					connThread.start();
