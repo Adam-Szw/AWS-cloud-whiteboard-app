@@ -33,6 +33,8 @@ public class Server {
 	List<Connection> serverConnections = new ArrayList<Connection>();
 	List<String> connectedServers = new ArrayList<String>();
 	
+	public Lock IPlock = new ReentrantLock();
+	
 	public Server(int port) {
 		this.port = port;
 		this.updateState = new State();

@@ -1,6 +1,7 @@
 package whiteboard_server;
 
 import java.net.Socket;
+import java.util.ArrayList;
 
 /**
  * Creates client connections.
@@ -25,6 +26,10 @@ public class ClientAccepter implements Runnable {
 			 * Await client to connect and if received - create new connection execution
 			 */
 			try {
+				server.IPlock.lock();
+				@SuppressWarnings("unchecked")
+				ArrayList<String> serverIPsCopy = (ArrayList<String>) peerAccepter.serverIPs.clone();
+				server.IPlock.unlock();
 				Socket connectionSocket = server.serverSocket.accept();
 				String receivedIP = connectionSocket.getRemoteSocketAddress().toString();
 				receivedIP = receivedIP.substring(1, receivedIP.indexOf(":"));
@@ -33,7 +38,7 @@ public class ClientAccepter implements Runnable {
 					server.connectionsLock.unlock();
 					continue;
 				}
-				if(peerAccepter.serverIPs.contains(receivedIP)) {
+				if(serverIPsCopy.contains(receivedIP)) {
 					if(Server.DEBUG_MODE) System.out.println("New server peer connection established with: " + receivedIP);
 					Connection connection = new Connection(server, connectionSocket, true, receivedIP);
 					Thread connThread = new Thread(connection);

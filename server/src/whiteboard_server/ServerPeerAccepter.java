@@ -28,25 +28,25 @@ public class ServerPeerAccepter implements Runnable {
 	
 	private void addExistingServerIPs() {
 		try {
-			if(Server.DEBUG_MODE) System.out.println("Creating list of existing server IPs");
 			ProcessBuilder processBuilder = new ProcessBuilder("aws", "ec2", "describe-instances");
 			Process process = processBuilder.start();
-			 InputStreamReader isr = new InputStreamReader(process.getInputStream());
-			 BufferedReader reader = new BufferedReader(isr);
-			 String jsonTotal = "";
-			 String line;
-			 while ((line = reader.readLine()) != null) {
-				 jsonTotal += line + "\n";
-			 }
-			 System.out.println(jsonTotal);
-			 for(String str : jsonTotal.split("\n")) {
-				 if(str.contains("PublicIpAddress")) {
-					 str = str.replaceAll("\\s","");
-					 String ip = str.substring(19, str.length()-2);
-					 serverIPs.add(ip);
-					 if(Server.DEBUG_MODE) System.out.println("Adding IP to the list: " + ip);
-				 }
-			 }
+			InputStreamReader isr = new InputStreamReader(process.getInputStream());
+			BufferedReader reader = new BufferedReader(isr);
+			String jsonTotal = "";
+			String line;
+			while ((line = reader.readLine()) != null) {
+				jsonTotal += line + "\n";
+			}
+			for(String str : jsonTotal.split("\n")) {
+				if(str.contains("PublicIpAddress")) {
+					str = str.replaceAll("\\s","");
+					String ip = str.substring(19, str.length()-2);
+					if(!serverIPs.contains(ip)) {
+						serverIPs.add(ip);
+						if(Server.DEBUG_MODE) System.out.println("Detected server under IP: " + ip);
+					}
+				}
+			}
 		} catch (IOException e) {
 			System.out.println("Failed to launch aws ec2 describe-instances command");
 			e.printStackTrace();
@@ -60,8 +60,10 @@ public class ServerPeerAccepter implements Runnable {
 			url = new URL(urlString);
 			BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
 			String IP = br.readLine();
-			serverIPs.remove(IP);
-			if(Server.DEBUG_MODE) System.out.println("Removing my own IP from the list: " + IP);
+			if(serverIPs.contains(IP)) {
+				serverIPs.remove(IP);
+				if(Server.DEBUG_MODE) System.out.println("Removing my own IP from the list: " + IP);
+			}
 		} catch (Exception e) {
 			System.out.println("Couldnt connect to amazon website to check IP");
 			e.printStackTrace();
@@ -70,13 +72,16 @@ public class ServerPeerAccepter implements Runnable {
 
 	@Override
 	public void run() {
-		addExistingServerIPs();
-		removeMyIpFromList();
 		while(true) {
-			for(int i = 0; i < serverIPs.size(); i++) {
-				String host = serverIPs.get(i);
+			server.IPlock.lock();
+			addExistingServerIPs();
+			removeMyIpFromList();
+			@SuppressWarnings("unchecked")
+			ArrayList<String> serverIPsCopy = (ArrayList<String>) serverIPs.clone();
+			server.IPlock.unlock();
+			for(int i = 0; i < serverIPsCopy.size(); i++) {
+				String host = serverIPsCopy.get(i);
 				try {
-					//todo - timeout this!!
 					socket = new Socket(host, port);
 					server.connectionsLock.lock();
 					if(server.connectedServers.contains(host)) {
