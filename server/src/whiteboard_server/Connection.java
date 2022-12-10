@@ -143,10 +143,9 @@ public class Connection implements Runnable {
 				messages.remove(0);
 			}
 			messageLock.unlock();
-		} catch (EOFException e) {
-			// Expected
 		} catch (Exception e) {
 			// Connection to client lost
+			e.printStackTrace();
 			close();
 		}
 	}
@@ -158,10 +157,9 @@ public class Connection implements Runnable {
 			server.stateLock.lock();
 			decodeMessage(str);
 			server.stateLock.unlock();
-		} catch (EOFException e) {
-			// Expected
 		} catch (Exception e) {
 			// Connection to client lost
+			e.printStackTrace();
 			close();
 		}
 	}
