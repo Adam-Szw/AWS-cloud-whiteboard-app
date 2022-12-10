@@ -92,7 +92,9 @@ public class ServerPeerAccepter implements Runnable {
 						server.connectionsLock.unlock();
 						continue;
 					}
+					server.connectionsLock.unlock();
 					socket = new Socket(host, port);
+					server.connectionsLock.lock();
 					if(Server.DEBUG_MODE) System.out.println("New server peer connection established with: " + host);
 					Connection connection = new Connection(server, socket, true, host);
 					Thread connThread = new Thread(connection);
