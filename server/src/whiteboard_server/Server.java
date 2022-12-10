@@ -73,6 +73,7 @@ public class Server {
 		connectionsLock.lock();
 		for(Connection connection : serverConnections) {
 			connection.sendMessage(update);
+			System.out.println("sending msg to serv: " + connection.ip + ", " + update);
 		}
 		connectionsLock.unlock();
 	}
