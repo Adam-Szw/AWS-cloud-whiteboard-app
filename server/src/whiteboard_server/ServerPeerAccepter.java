@@ -87,12 +87,12 @@ public class ServerPeerAccepter implements Runnable {
 			for(int i = 0; i < serverIPsCopy.size(); i++) {
 				String host = serverIPsCopy.get(i);
 				try {
-					socket = new Socket(host, port);
 					server.connectionsLock.lock();
 					if(server.connectedServers.contains(host)) {
 						server.connectionsLock.unlock();
 						continue;
 					}
+					socket = new Socket(host, port);
 					if(Server.DEBUG_MODE) System.out.println("New server peer connection established with: " + host);
 					Connection connection = new Connection(server, socket, true, host);
 					Thread connThread = new Thread(connection);
