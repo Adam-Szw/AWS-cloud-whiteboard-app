@@ -1,0 +1,32 @@
+package whiteboard_server;
+
+import java.net.Socket;
+import java.util.List;
+
+/**
+ * Creates connections to other servers.
+ * 
+ * @author aks60
+ *
+ */
+public class ServerPeerAccepter implements Runnable {
+	
+	private List<String> ips;
+	private int port;
+	private Socket socket;
+	
+	public ServerPeerAccepter(List<String> ips, int port) {
+		this.ips = ips;
+		this.port = port;
+	}
+
+	@Override
+	public void run() {
+		for(int i = 0; i < ips.size(); i++) {
+			String host = ips.get(i);
+			socket = new Socket(host, port);
+		}
+		
+	}
+
+}

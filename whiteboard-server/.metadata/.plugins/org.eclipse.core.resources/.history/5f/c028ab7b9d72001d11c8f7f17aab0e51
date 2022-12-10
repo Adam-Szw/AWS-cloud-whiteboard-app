@@ -1,0 +1,39 @@
+package whiteboard_server;
+
+import java.net.Socket;
+
+/**
+ * Creates client connections.
+ * 
+ * @author aks60
+ * 
+ */
+public class ConnectionAccepter implements Runnable {
+
+	private Server server;
+	
+	public ConnectionAccepter(Server server) {
+		this.server = server;
+	}
+	
+	@Override
+	public void run() {
+		while(true) {
+			/*
+			 * Await client to connect and if received - create new connection execution
+			 */
+			try {
+				Socket clientSocket = server.serverSocket.accept();
+				if(Server.DEBUG_MODE) System.out.println("New client connection established");
+				ClientConnection connection = new ClientConnection(server, clientSocket);
+				Thread connThread = new Thread(connection);
+				connThread.start();
+				server.clientConnections.add(connection);
+			} catch(Exception e){
+				System.out.println("Client connection error");
+				e.printStackTrace();
+			}
+		}
+	}
+
+}

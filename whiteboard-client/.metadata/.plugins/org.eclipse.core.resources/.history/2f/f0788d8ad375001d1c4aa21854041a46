@@ -1,0 +1,79 @@
+package application;
+
+import java.awt.BorderLayout;
+import java.awt.Container;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.image.BufferedImage;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+
+/**
+ * 
+ * Class for managing the visual aspects of the white board application client
+ * 
+ * @author aks60
+ *
+ */
+public class Whiteboard {
+	
+	private JFrame frame;
+	private Container content;
+	private Connector connector;
+	private DrawingPanel panel;
+	
+	public Whiteboard(Connector connector) {
+		this.connector = connector;
+	    frame = new JFrame("Whiteboard App");
+	    content = frame.getContentPane();
+	    content.setLayout(new BorderLayout());
+	    addDrawingPanel();
+	    addButtons();
+	}
+	
+	private void addDrawingPanel() {
+	    panel = new DrawingPanel(connector);
+	    content.add(panel, BorderLayout.CENTER);
+	}
+	
+	private void addButtons() {
+	    JPanel buttonsPanel = new JPanel();
+	    GridLayout gl = new GridLayout(0, 1);
+	    buttonsPanel.setLayout(gl);
+	    
+	    JButton btnClear = new JButton("Clear");
+	    JButton btnBrush = new JButton("Brush");
+	    btnBrush.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				panel.drawingMode = DrawingPanel.mode.brush;
+			}
+	    });
+	    JButton btnLine = new JButton("Line");
+	    btnLine.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				panel.drawingMode = DrawingPanel.mode.line;
+			}
+	    });
+	    buttonsPanel.add(btnClear);
+	    buttonsPanel.add(btnBrush);
+	    buttonsPanel.add(btnLine);
+	    
+	    content.add(buttonsPanel, BorderLayout.WEST);
+	}
+	
+	public void open(int width, int height) {
+	    panel.boundsX = width;
+	    panel.boundsY = height;
+	    frame.setSize(width, height);
+	    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	    frame.setVisible(true);
+	}
+
+}

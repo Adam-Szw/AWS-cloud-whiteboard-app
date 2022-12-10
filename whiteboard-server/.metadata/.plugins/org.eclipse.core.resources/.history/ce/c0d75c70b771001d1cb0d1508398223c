@@ -1,0 +1,17 @@
+package whiteboard_server;
+
+public class ConnectionChecker implements Runnable {
+
+	private Server server;
+	
+	public ConnectionChecker(Server server) {
+		
+	}
+	
+	@Override
+	public void run() {
+		// TODO Auto-generated method stub
+		
+	}
+
+}

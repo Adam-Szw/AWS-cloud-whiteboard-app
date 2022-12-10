@@ -1,0 +1,33 @@
+package whiteboard_server;
+
+/**
+ * Checks if connections are still active and closes them if they are not.
+ * 
+ * @author aks60
+ *
+ */
+public class ConnectionChecker implements Runnable {
+
+	private Server server;
+	
+	public ConnectionChecker(Server server) {
+		this.server = server;
+	}
+	
+	@Override
+	public void run() {
+		for(ClientConnection connection : server.clientConnections) {
+			if(connection.closed) {
+				server.clientConnections.remove(connection);
+				break;
+			}
+		}
+		try {
+			Thread.sleep(Server.UPDATE_TICKRATE);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+}

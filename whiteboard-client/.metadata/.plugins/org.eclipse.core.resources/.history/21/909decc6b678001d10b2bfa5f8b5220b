@@ -1,0 +1,78 @@
+package application;
+
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+/**
+ * Main class
+ * 
+ * @author aks60
+ *
+ */
+public class App {
+	
+	public static final boolean DEBUG_MODE = true;
+	
+	public static int CLIENT_TICKRATE = 100;
+	public static int COMMS_TICKRATE = 10;
+	
+	public static String AUTOBALANCER_IP = "server-nlb-134ffeb68c27e8d3.elb.eu-west-2.amazonaws.com";
+	public static int PORT = 80;
+
+	public static void sleepThread(String err, int tickrate) {
+		try {
+			Thread.sleep(tickrate);
+		} catch (InterruptedException e) {
+			System.out.println(err + " thread interrupted");
+			e.printStackTrace();
+		}
+	}
+	
+	public static void main(String[] args) throws IOException, JSONException {
+		
+		      // Construct a ProcessBuilder object to run the "aws ec2 describe-instances" command
+		      ProcessBuilder processBuilder = new ProcessBuilder("aws", "ec2", "describe-instances");
+
+		      // Start the process and get the Process object
+		      Process process = processBuilder.start();
+
+		      // Use the Process object to get the output of the "aws ec2 describe-instances" command
+		      // This output is in JSON format, and contains information about each EC2 instance
+		      InputStreamReader isr = new InputStreamReader(process.getInputStream());
+		      BufferedReader reader = new BufferedReader(isr);
+
+		      // Read the output of the "aws ec2 describe-instances" command line by line
+		      // Each line is a JSON string that represents an EC2 instance
+		      String line;
+		      while ((line = reader.readLine()) != null) {
+		        // Parse the JSON string into a JSONObject
+		        JSONObject json = new JSONObject(line);
+
+		        // Get the list of EC2 instances from the JSON output
+		        JSONArray instances = json.getJSONArray("Reservations").getJSONObject(0).getJSONArray("Instances");
+
+		        // Loop through the list of EC2 instances and get the public IP address of each instance
+		        for (int i = 0; i < instances.length(); i++) {
+		          JSONObject instance = instances.getJSONObject(i);
+		          String publicIp = instance.getString("PublicIpAddress");
+		          System.out.println(publicIp);
+		        }
+		      }
+		
+		Connector connector = new Connector(AUTOBALANCER_IP);
+		Whiteboard whiteboard = new Whiteboard(connector);
+		whiteboard.open(800, 600);
+
+	    // Its important that this is called AFTER creating panel
+		Thread connectorThread = new Thread(connector);
+		connectorThread.start();
+	    
+	}
+
+}

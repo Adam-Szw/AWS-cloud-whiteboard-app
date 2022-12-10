@@ -1,0 +1,22 @@
+package whiteboard_server;
+
+/**
+ * 
+ * 
+ * @author aks60
+ *
+ */
+public class ConnectionChecker implements Runnable {
+
+	private Server server;
+	
+	public ConnectionChecker(Server server) {
+		this.server = server;
+	}
+	
+	@Override
+	public void run() {
+		
+	}
+
+}
