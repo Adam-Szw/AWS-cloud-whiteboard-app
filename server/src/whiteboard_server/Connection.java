@@ -137,6 +137,7 @@ public class Connection implements Runnable {
 			messageLock.lock();
 			while(messages.size() > 0) {
 				dout.writeUTF(messages.get(0));
+				if(Server.PRINT_MSG) System.out.println("OUT: " + (messages.get(0)));
 				dout.flush();
 				messages.remove(0);
 			}
@@ -150,6 +151,7 @@ public class Connection implements Runnable {
 	private void receiveMessage() {
 		try {
 			String str = din.readUTF();
+			if(Server.PRINT_MSG) System.out.println("IN: " + str);
 			server.stateLock.lock();
 			decodeMessage(str);
 			server.stateLock.unlock();

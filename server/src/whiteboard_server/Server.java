@@ -19,6 +19,7 @@ public class Server {
 	public static final int UPDATE_TICKRATE = 100;
 	public static final int COMMS_TICKRATE = 10;
 	public static final boolean DEBUG_MODE = true;
+	public static final boolean PRINT_MSG = true;
 	
 	public static final int SERVER_PORT = 6668;
 	
@@ -109,8 +110,8 @@ public class Server {
 		accepterThread.start();
 		
 		// Get up to date with other servers
-		// Give some time for systems threads to boot up
-		sleepThread("Main thread", UPDATE_TICKRATE * 10);
+		// Give some time for other servers to be picked up by peer accepter
+		while(!peerAccepter.serverInitCheck) sleepThread("Main thread", UPDATE_TICKRATE);
 		server.requestStates();
 	}
 

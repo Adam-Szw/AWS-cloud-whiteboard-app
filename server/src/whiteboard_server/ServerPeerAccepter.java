@@ -17,6 +17,7 @@ import java.util.ArrayList;
 public class ServerPeerAccepter implements Runnable {
 	
 	public ArrayList<String> serverIPs = new ArrayList<String>();
+
 	private int port;
 	private Socket socket;
 	private Server server;
@@ -24,6 +25,7 @@ public class ServerPeerAccepter implements Runnable {
 	private String myIP;
 	
 	public boolean initialized = false;
+	public boolean serverInitCheck = false;
 	
 	public ServerPeerAccepter(int port, Server server) {
 		this.port = port;
@@ -78,10 +80,10 @@ public class ServerPeerAccepter implements Runnable {
 		while(true) {
 			server.IPlock.lock();
 			addExistingServerIPs();
-			initialized = true;
 			@SuppressWarnings("unchecked")
 			ArrayList<String> serverIPsCopy = (ArrayList<String>) serverIPs.clone();
 			server.IPlock.unlock();
+			initialized = true;
 			for(int i = 0; i < serverIPsCopy.size(); i++) {
 				String host = serverIPsCopy.get(i);
 				try {
@@ -106,6 +108,7 @@ public class ServerPeerAccepter implements Runnable {
 					e.printStackTrace();
 				}
 			}
+			serverInitCheck = true;
 			// New server connections will not be made often
 			Server.sleepThread("Peer accepter thread", Server.UPDATE_TICKRATE);
 		}
