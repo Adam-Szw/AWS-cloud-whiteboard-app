@@ -147,7 +147,6 @@ public class Connection implements Runnable {
 			// Expected
 		} catch (Exception e) {
 			// Connection to client lost
-			e.printStackTrace();
 			close();
 		}
 	}
@@ -163,7 +162,6 @@ public class Connection implements Runnable {
 			// Expected
 		} catch (Exception e) {
 			// Connection to client lost
-			e.printStackTrace();
 			close();
 		}
 	}
