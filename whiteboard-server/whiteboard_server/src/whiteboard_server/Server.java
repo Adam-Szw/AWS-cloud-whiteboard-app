@@ -1,10 +1,7 @@
 package whiteboard_server;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.ServerSocket;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
@@ -35,15 +32,6 @@ public class Server {
 	List<Connection> clientConnections = new ArrayList<Connection>();
 	List<Connection> serverConnections = new ArrayList<Connection>();
 	List<String> connectedServers = new ArrayList<String>();
-	
-	// List of available servers to connect to on the network
-	// They should be source from AWS elastic IP service
-	@SuppressWarnings("serial")
-	public static final ArrayList<String> serverIPs = new ArrayList<String>() {
-		{
-			
-		}
-	};
 	
 	public Server(int port) {
 		this.port = port;
@@ -93,23 +81,8 @@ public class Server {
 		}
 		connectionsLock.unlock();
 	}
-	
-	public static void removeMyIpFromList() {
-		String urlString = "http://checkip.amazonaws.com/";
-		URL url;
-		try {
-			url = new URL(urlString);
-			BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
-			String IP = br.readLine();
-			serverIPs.remove(IP);
-		} catch (Exception e) {
-			System.out.println("Couldnt connect to amazon website to check IP");
-			e.printStackTrace();
-		}
-	}
 
 	public static void main(String[] args){
-		removeMyIpFromList();
 		Server server = new Server(SERVER_PORT);
 		
 		// Communication threads
@@ -122,12 +95,12 @@ public class Server {
 		
 		// Connection threads
 		sleepThread("Main thread", UPDATE_TICKRATE * 10);
-		ClientAccepter accepter = new ClientAccepter(server);
-		Thread accepterThread = new Thread(accepter);
-		accepterThread.start();
-		ServerPeerAccepter peerAccepter = new ServerPeerAccepter(serverIPs, SERVER_PORT, server);
+		ServerPeerAccepter peerAccepter = new ServerPeerAccepter(SERVER_PORT, server);
 		Thread peerThread = new Thread(peerAccepter);
 		peerThread.start();
+		ClientAccepter accepter = new ClientAccepter(server, peerAccepter);
+		Thread accepterThread = new Thread(accepter);
+		accepterThread.start();
 		
 		// Get up to date with other servers
 		// Give some time for systems threads to boot up

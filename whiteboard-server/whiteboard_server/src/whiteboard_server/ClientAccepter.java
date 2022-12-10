@@ -11,9 +11,11 @@ import java.net.Socket;
 public class ClientAccepter implements Runnable {
 
 	private Server server;
+	private ServerPeerAccepter peerAccepter;
 	
-	public ClientAccepter(Server server) {
+	public ClientAccepter(Server server, ServerPeerAccepter peerAccepter) {
 		this.server = server;
+		this.peerAccepter = peerAccepter;
 	}
 	
 	@Override
@@ -31,7 +33,7 @@ public class ClientAccepter implements Runnable {
 					server.connectionsLock.unlock();
 					continue;
 				}
-				if(Server.serverIPs.contains(receivedIP)) {
+				if(peerAccepter.serverIPs.contains(receivedIP)) {
 					if(Server.DEBUG_MODE) System.out.println("New server peer connection established with: " + receivedIP);
 					Connection connection = new Connection(server, connectionSocket, true, receivedIP);
 					Thread connThread = new Thread(connection);
