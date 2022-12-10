@@ -1,8 +1,0 @@
-package whiteboard_server;
-
-import java.net.DatagramSocket;
-
-public class NetworkDiscovery {
-
-	
-}
