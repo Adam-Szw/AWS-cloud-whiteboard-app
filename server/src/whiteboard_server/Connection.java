@@ -56,8 +56,11 @@ public class Connection implements Runnable {
 			@Override
 			public void run() {
 				while(!closed) {
-					writeMessage();
-					Server.sleepThread("Responder thread", Server.COMMS_TICKRATE);
+					if(messages.size() != 0) writeMessage();
+					else {
+						messages.add("CONNECTION_TEST\n");
+						Server.sleepThread("Responder thread", Server.UPDATE_TICKRATE * 5);
+					}
 				}
 			}
 		});
@@ -136,9 +139,6 @@ public class Connection implements Runnable {
 		try {
 			if(!socket.isConnected()) close();
 			messageLock.lock();
-			while(messages.size() <= 0) {
-				messages.add("CONNECTION_TEST\n");
-			}
 			dout.writeUTF(messages.get(0));
 			if(Server.PRINT_MSG) System.out.println("OUT: " + (messages.get(0)));
 			dout.flush();
