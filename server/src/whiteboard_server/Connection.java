@@ -138,12 +138,13 @@ public class Connection implements Runnable {
 		try {
 			if(!socket.isConnected()) close();
 			messageLock.lock();
-			while(messages.size() > 0) {
-				dout.writeUTF(messages.get(0));
-				if(Server.PRINT_MSG) System.out.println("OUT: " + (messages.get(0)));
-				dout.flush();
-				messages.remove(0);
+			while(messages.size() <= 0) {
+				messages.add("CONNECTION_TEST\n");
 			}
+			dout.writeUTF(messages.get(0));
+			if(Server.PRINT_MSG) System.out.println("OUT: " + (messages.get(0)));
+			dout.flush();
+			messages.remove(0);
 			messageLock.unlock();
 		} catch (Exception e) {
 			// Connection to client lost
@@ -210,6 +211,8 @@ public class Connection implements Runnable {
 				server.stateLock.unlock();
 				String id = str.substring(14);
 				sendMessage("ACK;" + id);
+			} else if(strBegins(str, "CONNECTION_TEST")) {
+				// Just socket connection testing - do nothing
 			} else {
 				String update = "";
 				for(String msg : str.replace(";", ";@").split("@")) {
