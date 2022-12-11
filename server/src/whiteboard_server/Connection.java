@@ -136,6 +136,7 @@ public class Connection implements Runnable {
 	
 	private void writeMessage(){
 		try {
+			if(!socket.isConnected()) close();
 			messageLock.lock();
 			while(messages.size() > 0) {
 				dout.writeUTF(messages.get(0));
@@ -152,6 +153,7 @@ public class Connection implements Runnable {
 	
 	private void receiveMessage() {
 		try {
+			if(!socket.isConnected()) close();
 			if(din.available() <= 0) return;
 			String str = din.readUTF();
 			if(Server.PRINT_MSG) System.out.println("IN: " + str);
