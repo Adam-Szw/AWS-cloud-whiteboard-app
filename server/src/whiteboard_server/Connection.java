@@ -56,10 +56,8 @@ public class Connection implements Runnable {
 			@Override
 			public void run() {
 				while(!closed) {
-					if(messages.size() != 0) writeMessage();
-					else {
-						Server.sleepThread("Responder thread", Server.COMMS_TICKRATE);
-					}
+					writeMessage();
+					Server.sleepThread("Responder thread", Server.COMMS_TICKRATE);
 				}
 			}
 		});
