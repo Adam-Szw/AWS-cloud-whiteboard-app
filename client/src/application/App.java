@@ -13,8 +13,8 @@ public class App {
 	public static int CLIENT_TICKRATE = 100;
 	public static int COMMS_TICKRATE = 10;
 	
-	public static String AUTOBALANCER_IP = "18.130.223.163";
-	public static int PORT = 6668;
+	public static String AUTOBALANCER_IP = "server-nlb-134ffeb68c27e8d3.elb.eu-west-2.amazonaws.com";
+	public static int PORT = 80;
 
 	public static void sleepThread(String err, int tickrate) {
 		try {
