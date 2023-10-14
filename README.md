@@ -1,3 +1,6 @@
+This was a group project for university, however I am the author for the entirety of code included in this repository.
+Video showcase: https://youtu.be/-3_Ex4lB7b0
+
 AWS IAM role link: https://068189226064.signin.aws.amazon.com/console
 
 To develop the app:
